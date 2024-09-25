@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="0dp"
+    app:cardBackgroundColor="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_select_all"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SELECT ALL"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            app:icon="@drawable/ic_select_all"
+            app:iconSize="18dp"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp"
+            app:iconTint="#FFFFFF"
+            android:backgroundTint="#2196F3"
+            app:cornerRadius="4dp"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_marginEnd="2dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_unselect_all"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="UNSELECT"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            app:icon="@drawable/ic_unselect_all"
+            app:iconSize="18dp"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp"
+            app:iconTint="#FFFFFF"
+            android:backgroundTint="#2196F3"
+            app:cornerRadius="4dp"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_delete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="DELETE"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            app:icon="@drawable/ic_delete"
+            app:iconSize="18dp"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp"
+            app:iconTint="#FFFFFF"
+            android:backgroundTint="#2196F3"
+            app:cornerRadius="4dp"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_marginStart="2dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
