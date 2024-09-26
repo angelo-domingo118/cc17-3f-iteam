@@ -1,160 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F0F0F0"
-    tools:context=".MainActivity">
+    android:background="#F0F0F0">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appbar"
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        app:elevation="4dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:background="@android:color/transparent"
+        android:paddingTop="24dp"
+        app:elevation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:baselineAligned="false"
+            android:paddingBottom="16dp">
 
             <ImageView
-                android:id="@+id/iv_back"
+                android:id="@+id/iv_logo"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:padding="12dp"
-                android:src="@drawable/ic_back"
-                android:contentDescription="@string/back"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginStart="16dp"
+                android:contentDescription="@string/content_description_logo"
+                android:src="@drawable/ic_logo_placeholder"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:clickable="true"
-                android:focusable="true"
-                app:tint="#000000" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/tv_title"
+                android:id="@+id/tv_greeting"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/title"
-                android:textColor="#000000"
-                android:textSize="20sp"
+                android:text="@string/greeting_placeholder"
+                android:textAlignment="center"
+                android:textColor="#2196F3"
+                android:textSize="32sp"
                 android:textStyle="bold"
-                android:gravity="center"
-                app:layout_constraintStart_toEndOf="@id/iv_back"
-                app:layout_constraintEnd_toStartOf="@id/iv_more_options"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:id="@+id/iv_more_options"
+                android:id="@+id/iv_profile_picture"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:padding="12dp"
-                android:src="@drawable/ic_more"
-                android:contentDescription="@string/more_options"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/circle_background"
+                android:padding="8dp"
+                android:src="@drawable/ic_person"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:clickable="true"
-                android:focusable="true"
-                app:tint="#000000" />
+                app:tint="#2196F3" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.appbar.AppBarLayout>
 
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/appbar"
-        app:layout_constraintBottom_toTopOf="@id/bottom_user_input_navigation" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/bottom_user_input_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:padding="16dp"
-        android:elevation="8dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_user_input"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toStartOf="@id/btn_send"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_user_input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/type_message_hint"
-                android:textSize="16sp"
-                android:textColor="#000000"
-                android:textColorHint="#757575" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/btn_send"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_send"
-            android:contentDescription="@string/send"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/til_user_input"
-            app:layout_constraintBottom_toBottomOf="@id/til_user_input"
-            app:backgroundTint="#2196F3"
-            app:tint="@android:color/white" />
-
-        <LinearLayout
-            android:id="@+id/button_group"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_new_notebook"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/til_user_input"
-            android:orientation="horizontal">
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#2196F3"
+            android:paddingVertical="12dp"
+            android:text="@string/new_notebook"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            app:cornerRadius="24dp"
+            app:icon="@drawable/ic_add"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconSize="24dp"
+            app:iconTint="#FFFFFF" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_source"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/source"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:backgroundTint="#2196F3"
-                style="@style/Widget.MaterialComponents.Button" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_notes"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:text="@string/notes"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:backgroundTint="#2196F3"
-                style="@style/Widget.MaterialComponents.Button" />
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_chat"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/chat"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:backgroundTint="#2196F3"
-                style="@style/Widget.MaterialComponents.Button" />
-        </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/notebook_list_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

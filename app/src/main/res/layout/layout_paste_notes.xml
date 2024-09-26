@@ -77,6 +77,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:rippleColor="@color/primaryColorDark" />
+        app:rippleColor="@color/more_options_icon_tint" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

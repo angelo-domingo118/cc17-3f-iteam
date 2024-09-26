@@ -1,0 +1,1 @@
+data class Notebook(val id: String, var title: String, val creationDate: String)

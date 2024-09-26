@@ -32,12 +32,14 @@
     <string name="paste_notes_instruction">Paste or type your notes below:</string>
     <string name="paste_notes_hint">Enter your notes here</string>
     <string name="paste_texts_below">Paste the texts below.</string>
-    <string name="paste_notes_hint">Paste your notes here…</string>
     <string name="process_notes">Process Notes</string>
     <string name="analyze_website">Analyze Website</string>
     <string name="select_all">Select All</string>
     <string name="unselect_all">Unselect All</string>
-    <string name="delete">Delete</string>
     <string name="title">Title</string>
     <string name="type_message_hint">Ask me anything...</string>
+    <string name="note_title_hint">Placeholder\n</string>
+    <string name="note_content_hint">Placeholder\n</string>
+    <string name="save_note">Save\n</string>
+    <string name="back_button">Back\n</string>
 </resources>
