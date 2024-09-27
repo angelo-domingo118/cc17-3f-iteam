@@ -6,12 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
 
 class NotebookViewModel : ViewModel() {
-    private val _notebooks = MutableLiveData<List<Notebook>>(emptyList())
+    private val _notebooks = MutableLiveData<List<Notebook>>()
     val notebooks: LiveData<List<Notebook>> = _notebooks
 
     fun addNotebook(notebook: Notebook) {
-        val currentList = _notebooks.value ?: emptyList()
-        _notebooks.value = listOf(notebook) + currentList
+        val currentList = _notebooks.value.orEmpty().toMutableList()
+        currentList.add(notebook)
+        _notebooks.value = currentList
+    }
+
+    fun setNotebooks(notebooks: List<Notebook>) {
+        _notebooks.value = notebooks
     }
 
     fun getNotebook(id: String): LiveData<Notebook?> {
@@ -20,12 +25,13 @@ class NotebookViewModel : ViewModel() {
         }
     }
 
-    fun deleteNotebook(position: Int) {
-        val currentList = _notebooks.value?.toMutableList() ?: return
-        if (position in currentList.indices) {
-            currentList.removeAt(position)
+    fun deleteNotebook(position: Int): Notebook? {
+        val currentList = _notebooks.value?.toMutableList() ?: return null
+        return if (position in currentList.indices) {
+            val deletedNotebook = currentList.removeAt(position)
             _notebooks.value = currentList
-        }
+            deletedNotebook
+        } else null
     }
 
     fun renameNotebook(position: Int, newTitle: String) {
@@ -37,8 +43,19 @@ class NotebookViewModel : ViewModel() {
     }
 
     fun deleteNotebook(notebookId: String) {
-        // Implement the logic to delete the notebook from your data source
-        // This might involve calling a repository method or directly accessing a database
-        // After deletion, you might want to update any live data that's observing the notebooks
+        val currentList = _notebooks.value?.toMutableList() ?: mutableListOf()
+        currentList.removeIf { it.id == notebookId }
+        _notebooks.value = currentList
     }
+
+    fun renameNotebook(notebookId: String, newTitle: String) {
+        val currentList = _notebooks.value?.toMutableList() ?: mutableListOf()
+        val index = currentList.indexOfFirst { it.id == notebookId }
+        if (index != -1) {
+            currentList[index] = currentList[index].copy(title = newTitle)
+            _notebooks.value = currentList
+        }
+    }
+
+    // Remove the unused deleteNotebook(notebookId: String) function
 }

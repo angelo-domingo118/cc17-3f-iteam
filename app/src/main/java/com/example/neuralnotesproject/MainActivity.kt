@@ -27,12 +27,37 @@ import java.util.UUID
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.Observer
+import java.io.*
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var notebookListContainer: RecyclerView
     private lateinit var notebookAdapter: NotebookAdapter
     private lateinit var notebookViewModel: NotebookViewModel
+
+    private val notebookInteractionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            when {
+                data?.hasExtra("DELETED_NOTEBOOK_ID") == true -> {
+                    val deletedNotebookId = data.getStringExtra("DELETED_NOTEBOOK_ID")
+                    deletedNotebookId?.let {
+                        notebookViewModel.deleteNotebook(it)
+                        loadNotebooks() // Reload notebooks from storage
+                    }
+                }
+                data?.hasExtra("RENAMED_NOTEBOOK_ID") == true -> {
+                    val renamedNotebookId = data.getStringExtra("RENAMED_NOTEBOOK_ID")
+                    val newTitle = data.getStringExtra("NEW_TITLE")
+                    if (renamedNotebookId != null && newTitle != null) {
+                        notebookViewModel.renameNotebook(renamedNotebookId, newTitle)
+                        loadNotebooks() // Reload notebooks from storage
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         notebookViewModel = ViewModelProvider(this)[NotebookViewModel::class.java]
 
         setupRecyclerView()
+        loadNotebooks()  // Load notebooks when the app starts
         observeNotebooks()
 
         val btnNewNotebook: MaterialButton = findViewById(R.id.btn_new_notebook)
@@ -76,6 +102,59 @@ class MainActivity : AppCompatActivity() {
             creationDate = formattedDate
         )
         notebookViewModel.addNotebook(newNotebook)
+        saveNotebook(newNotebook)  // Save the notebook to local storage
+    }
+
+    private fun saveNotebook(notebook: Notebook) {
+        val folderName = notebook.id
+        val fileName = "notebook_details.txt"
+        
+        try {
+            val folder = File(filesDir, folderName)
+            folder.mkdirs()
+            
+            // Create subfolders
+            File(folder, "sources").mkdirs()
+            File(folder, "chat").mkdirs()
+            File(folder, "notes").mkdirs()
+            
+            val file = File(folder, fileName)
+            val writer = FileWriter(file)
+            writer.use {
+                it.write("${notebook.id}\n")
+                it.write("${notebook.title}\n")
+                it.write("${notebook.creationDate}\n")
+            }
+        } catch (e: IOException) {
+            Log.e("MainActivity", "Error saving notebook", e)
+        }
+    }
+
+    private fun loadNotebooks() {
+        val notebooks = mutableListOf<Notebook>()
+        
+        filesDir.listFiles()?.forEach { folder ->
+            if (folder.isDirectory) {
+                val file = File(folder, "notebook_details.txt")
+                if (file.exists()) {
+                    try {
+                        val lines = file.readLines()
+                        if (lines.size >= 3) {
+                            val notebook = Notebook(
+                                id = lines[0],
+                                title = lines[1],
+                                creationDate = lines[2]
+                            )
+                            notebooks.add(notebook)
+                        }
+                    } catch (e: IOException) {
+                        Log.e("MainActivity", "Error loading notebook", e)
+                    }
+                }
+            }
+        }
+        
+        notebookViewModel.setNotebooks(notebooks)
     }
 
     private fun showNotebookOptions(anchorView: View, position: Int) {
@@ -107,11 +186,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun deleteNotebook(position: Int) {
+        val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
         AlertDialog.Builder(this)
             .setTitle("Delete Notebook")
             .setMessage("Are you sure you want to delete this notebook?")
             .setPositiveButton("Delete") { _, _ ->
+                // Delete from ViewModel
                 notebookViewModel.deleteNotebook(position)
+                
+                // Delete from storage
+                val folder = File(filesDir, notebook.id)
+                if (folder.exists() && folder.isDirectory) {
+                    folder.deleteRecursively()
+                }
+                
                 Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
@@ -136,7 +224,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renameNotebook(position: Int, newTitle: String) {
+        val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
+        val updatedNotebook = notebook.copy(title = newTitle)
         notebookViewModel.renameNotebook(position, newTitle)
+        saveNotebook(updatedNotebook)  // Save the updated notebook to local storage
         Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
     }
 
@@ -146,8 +237,9 @@ class MainActivity : AppCompatActivity() {
             notebook?.let {
                 val intent = Intent(this, NotebookInteractionActivity::class.java).apply {
                     putExtra("NOTEBOOK_ID", it.id)
+                    putExtra("NOTEBOOK_TITLE", it.title)
                 }
-                startActivity(intent)
+                notebookInteractionLauncher.launch(intent)
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error starting NotebookInteractionActivity", e)
@@ -156,7 +248,12 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-data class Notebook(val id: String, var title: String, val creationDate: String)
+data class Notebook(
+    val id: String, 
+    var title: String, 
+    val creationDate: String,
+    val notes: Any = emptyList<String>() // Initialize with an empty list or any default value
+)
 
 class NotebookAdapter(
     private var notebooks: List<Notebook>,

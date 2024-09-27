@@ -1,86 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:fitsSystemWindows="true"
+    android:background="#FFFFFF">
 
-    <ImageButton
-        android:id="@+id/btn_back"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/back_button" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tv_edit_note_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Placeholder"
-        android:textSize="20sp"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        android:background="@color/purple_500"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <EditText
+            android:id="@+id/et_note_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:hint="Title"
+            android:textSize="24sp"
+            android:textColor="#000000"
+            android:textColorHint="#80000000"
+            android:inputType="text"
+            android:maxLines="1"
+            android:layout_marginBottom="16dp" />
 
-    <EditText
-        android:id="@+id/et_note_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:hint="@string/note_title_hint"
-        android:inputType="text"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@id/tv_edit_note_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="8dp" />
 
-    <View
-        android:id="@+id/divider"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/et_note_title"
-        app:layout_constraintStart_toStartOf="@id/et_note_title"
-        app:layout_constraintEnd_toEndOf="@id/et_note_title" />
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
 
-    <EditText
-        android:id="@+id/et_note_content"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:gravity="top"
-        android:hint="@string/note_content_hint"
-        android:inputType="textMultiLine"
-        android:background="@null"
-        app:layout_constraintTop_toBottomOf="@id/divider"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/et_note_title"
-        app:layout_constraintEnd_toEndOf="@id/et_note_title" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_bold"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_bold"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Bold"
+                    android:onClick="onFormatButtonClick"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_italic"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_italic"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Italic"
+                    android:onClick="onFormatButtonClick"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_underline"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_underline"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Underline"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_strikethrough"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_strikethrough"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Strikethrough"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_bullet_list"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_list_bulleted"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Bullet List"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_numbered_list"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_list_numbered"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Numbered List"
+                    app:tint="@drawable/format_button_selector" />
+
+                <ImageButton
+                    android:id="@+id/btn_indent"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_format_indent_increase"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Indent"
+                    app:tint="@drawable/format_button_selector" />
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
+            android:id="@+id/et_note_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="Start typing..."
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:textColorHint="#80000000"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false" />
+
+    </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_save"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_save"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="@string/save_note" />
+        app:tint="#FFFFFF"
+        app:backgroundTint="#2196F3"
+        android:contentDescription="Save" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

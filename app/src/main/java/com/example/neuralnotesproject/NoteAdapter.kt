@@ -9,7 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class NoteAdapter(
     private var notes: List<Note>,
-    private val onNoteClick: (Note) -> Unit
+    private val onNoteClick: (Note) -> Unit,
+    private val onSelectionChanged: (List<Note>) -> Unit
 ) : RecyclerView.Adapter<NoteAdapter.ViewHolder>() {
 
     private val selectedItems = mutableSetOf<String>()
@@ -37,6 +38,7 @@ class NoteAdapter(
             } else {
                 selectedItems.remove(note.id)
             }
+            onSelectionChanged(getSelectedItems())
         }
         holder.itemView.setOnClickListener { onNoteClick(note) }
     }

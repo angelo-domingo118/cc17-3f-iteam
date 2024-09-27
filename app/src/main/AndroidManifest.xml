@@ -25,6 +25,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".NotebookInteractionActivity" android:exported="false" />
+        <activity android:name=".EditNoteActivity" />
     </application>
 
 </manifest>

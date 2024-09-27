@@ -47,8 +47,7 @@ class SourcesFragment : Fragment() {
             deleteSelectedSources()
         }
 
-        // For demonstration, let's add some sample sources
-        addSampleSources()
+        // Remove the call to addSampleSources()
     }
 
     private fun showAddSourceBottomSheet() {
@@ -56,12 +55,7 @@ class SourcesFragment : Fragment() {
         addSourceBottomSheet.show(childFragmentManager, AddSourceBottomSheetFragment.TAG)
     }
 
-    private fun addSampleSources() {
-        sources.add(Source("1", "Sample File.pdf", SourceType.FILE))
-        sources.add(Source("2", "https://example.com", SourceType.WEBSITE))
-        sources.add(Source("3", "Pasted Text", SourceType.TEXT))
-        sourceAdapter.updateSources(sources)
-    }
+    // Remove the addSampleSources() function
 
     fun addSource(source: Source) {
         sources.add(source)

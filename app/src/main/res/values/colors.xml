@@ -15,8 +15,8 @@
     <color name="secondary_text_color">#757575</color>
     
     <!-- Message background colors -->
-    <color name="user_message_background">#2979FF</color>
-    <color name="ai_message_background">@color/light_blue_background</color>
+    <color name="user_message_background">#E3F2FD</color>
+    <color name="ai_message_background">#E3F2FD</color>
     
     <!-- Light blue background for AI messages -->
     <color name="light_blue_background">#E1F5FE</color>
@@ -30,4 +30,13 @@
     <color name="more_options_icon_tint">#F44336</color>
     <color name="primaryColorDark">#9C27B0</color>
     <color name="purple_500">#F44336</color>
+    
+    <!-- New colors for AI messages -->
+    <color name="ai_message_text">#000000</color>
+    <color name="ai_message_icon">#4CAF50</color>
+    <color name="user_message_text">#000000</color>
+    
+    <!-- New colors for like/dislike buttons -->
+    <color name="like_button_active">#1976D2</color>
+    <color name="like_button_inactive">#BDBDBD</color>
 </resources>
