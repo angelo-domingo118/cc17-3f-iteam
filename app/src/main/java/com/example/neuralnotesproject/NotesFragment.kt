@@ -104,7 +104,7 @@ class NotesFragment : Fragment() {
         editNoteActivityLauncher.launch(intent)
     }
 
-    private fun addNote(title: String, content: String) {
+    fun addNote(title: String, content: String) {
         val newNote = Note(UUID.randomUUID().toString(), title, content)
         notes.add(newNote)
         FileUtils.saveNote(requireContext(), notebookId, newNote)

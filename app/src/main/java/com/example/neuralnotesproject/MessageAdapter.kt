@@ -11,11 +11,11 @@ import android.content.Context
 import android.widget.Toast
 import com.google.android.material.button.MaterialButton
 import androidx.core.content.ContextCompat
-import android.content.res.ColorStateList  // Add this import
+import android.content.res.ColorStateList
 
 class MessageAdapter(
     private val messages: MutableList<Message>,
-    private val onSaveClick: (Message) -> Unit
+    private val onSaveButtonClick: (Message) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -81,7 +81,7 @@ class MessageAdapter(
         }
 
         holder.btnSave.setOnClickListener {
-            onSaveClick(message)
+            onSaveButtonClick(message)
         }
 
         // Set initial like/dislike button states
@@ -121,7 +121,6 @@ class MessageAdapter(
         notifyItemInserted(messages.size - 1)
     }
 
-    fun getMessages(): List<Message> {
-        return messages
-    }
+    // Remove this method as it's no longer needed
+    // fun getMessages(): List<Message> = messages
 }

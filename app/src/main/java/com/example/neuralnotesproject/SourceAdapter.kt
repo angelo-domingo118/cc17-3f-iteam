@@ -11,7 +11,8 @@ import kotlin.collections.mutableSetOf
 
 class SourceAdapter(
     private var sources: List<Source>,
-    private val onSourceClick: (Source) -> Unit
+    private val onSourceClick: (Source) -> Unit,
+    private val onSelectionChanged: (List<Source>) -> Unit
 ) : RecyclerView.Adapter<SourceAdapter.ViewHolder>() {
 
     private val selectedItems = mutableSetOf<String>()
@@ -48,6 +49,7 @@ class SourceAdapter(
             } else {
                 selectedItems.remove(source.id)
             }
+            onSelectionChanged(getSelectedItems())
         }
 
         holder.itemView.setOnClickListener { onSourceClick(source) }

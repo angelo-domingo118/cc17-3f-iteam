@@ -51,8 +51,12 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private var sourcesFragment: SourcesFragment? = null
 
     private var selectedNotes: List<Note> = emptyList()
+    private var selectedSources: List<Source> = emptyList()
 
     private var selectedNotesContent: String = ""
+    private var selectedSourcesContent: String = ""
+
+    private val chatContext = mutableListOf<Message>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +83,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         inputEditText = findViewById(R.id.et_user_input)
         sendButton = findViewById(R.id.btn_send)
 
-        messageAdapter = MessageAdapter(mutableListOf(), ::onSaveButtonClick)
+        messageAdapter = MessageAdapter(chatContext, ::onSaveButtonClick)
         recyclerView.adapter = messageAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -141,23 +145,31 @@ class NotebookInteractionActivity : AppCompatActivity() {
         selectedNotesContent = notes.joinToString("\n\n") { "${it.title}\n${it.content}" }
     }
 
+    fun onSelectedSourcesChanged(sources: List<Source>) {
+        selectedSources = sources
+        selectedSourcesContent = sources.joinToString("\n\n") { "${it.name}\n${it.content}" }
+    }
+
     private fun sendMessage(message: String) {
         if (message.isEmpty()) {
             showError("Message cannot be empty")
             return
         }
 
-        messageAdapter.addMessage(Message(message, true))
-        recyclerView.scrollToPosition(messageAdapter.itemCount - 1)
+        val userMessage = Message(message, true)
+        chatContext.add(userMessage)
+        messageAdapter.notifyItemInserted(chatContext.size - 1)
+        recyclerView.scrollToPosition(chatContext.size - 1)
 
-        // Use Gemini API to generate response with context
         lifecycleScope.launch {
             try {
                 val prompt = buildPromptWithContext(message)
                 val response = generativeModel.generateContent(prompt)
                 val aiResponse = response.text ?: "Sorry, I couldn't generate a response."
-                messageAdapter.addMessage(Message(aiResponse, false))
-                recyclerView.scrollToPosition(messageAdapter.itemCount - 1)
+                val aiMessage = Message(aiResponse, false)
+                chatContext.add(aiMessage)
+                messageAdapter.notifyItemInserted(chatContext.size - 1)
+                recyclerView.scrollToPosition(chatContext.size - 1)
             } catch (e: Exception) {
                 showError("Failed to generate AI response: ${e.message}")
             }
@@ -165,17 +177,36 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun buildPromptWithContext(userMessage: String): String {
-        val contextPrompt = if (selectedNotesContent.isNotEmpty()) {
-            "The following are selected notes from the user's notebook:\n\n$selectedNotesContent\n\n" +
-            "Please consider this information as context for your response. " +
-            "If relevant, refer to or incorporate details from these notes in your answer."
-        } else {
-            "You are an AI assistant in a note-taking app. " +
-            "The user can create notebooks and add notes to them. " +
-            "They can also chat with you for assistance or insights related to their notes."
+        val contextPrompt = when {
+            selectedNotesContent.isNotEmpty() && selectedSourcesContent.isNotEmpty() -> {
+                "The following are selected notes and sources from the user's notebook:\n\n" +
+                "Notes:\n$selectedNotesContent\n\n" +
+                "Sources:\n$selectedSourcesContent\n\n" +
+                "Please consider this information as context for your response. " +
+                "If relevant, refer to or incorporate details from these notes and sources in your answer."
+            }
+            selectedNotesContent.isNotEmpty() -> {
+                "The following are selected notes from the user's notebook:\n\n$selectedNotesContent\n\n" +
+                "Please consider this information as context for your response. " +
+                "If relevant, refer to or incorporate details from these notes in your answer."
+            }
+            selectedSourcesContent.isNotEmpty() -> {
+                "The following are selected sources from the user's notebook:\n\n$selectedSourcesContent\n\n" +
+                "Please consider this information as context for your response. " +
+                "If relevant, refer to or incorporate details from these sources in your answer."
+            }
+            else -> {
+                "You are an AI assistant in a note-taking app. " +
+                "The user can create notebooks, add notes, and import sources. " +
+                "They can also chat with you for assistance or insights related to their notes and sources."
+            }
         }
 
-        return "$contextPrompt\n\nUser: $userMessage\n\nAI:"
+        val chatHistory = chatContext.takeLast(10).joinToString("\n") { 
+            if (it.isUser) "User: ${it.content}" else "AI: ${it.content}"
+        }
+
+        return "$contextPrompt\n\nChat history:\n$chatHistory\n\nUser: $userMessage\n\nAI:"
     }
 
     private fun onSaveButtonClick(message: Message) {
@@ -204,7 +235,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     private fun getRandomResponse(): String {
@@ -316,7 +347,11 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private fun showSourcesFragment() {
         hideCurrentFragment()
         if (sourcesFragment == null) {
-            sourcesFragment = SourcesFragment()
+            sourcesFragment = SourcesFragment().apply {
+                arguments = Bundle().apply {
+                    putString("notebookId", notebookId)
+                }
+            }
             supportFragmentManager.beginTransaction()
                 .add(R.id.fragment_container, sourcesFragment!!)
                 .commit()
@@ -364,6 +399,8 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Clear chat context when leaving the notebook
+        chatContext.clear()
         // Clear fragment instances to reset state when activity is destroyed
         notesFragment = null
         sourcesFragment = null

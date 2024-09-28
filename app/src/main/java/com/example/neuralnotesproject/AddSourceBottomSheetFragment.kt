@@ -1,13 +1,26 @@
 package com.example.neuralnotesproject
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
+
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                // Handle the selected file
+                (parentFragment as? SourceActionListener)?.onFileSelected(uri)
+            }
+        }
+    }
 
     override fun getTheme(): Int = R.style.BottomSheetDialogTheme
 
@@ -19,7 +32,7 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.btn_add_from_files).setOnClickListener {
-            // Handle add from files
+            launchFilePicker()
         }
 
         view.findViewById<View>(R.id.btn_website_link).setOnClickListener {
@@ -31,6 +44,15 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
+    private fun launchFilePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/pdf", "text/plain"))
+        }
+        filePickerLauncher.launch(intent)
+    }
+
     private fun showWebsiteUrlInput() {
         val websiteUrlFragment = WebsiteUrlInputFragment()
         websiteUrlFragment.show(parentFragmentManager, "WebsiteUrlInputFragment")
@@ -38,8 +60,7 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun showPasteNotes() {
-        val pasteNotesFragment = PasteNotesFragment()
-        pasteNotesFragment.show(parentFragmentManager, "PasteNotesFragment")
+        (parentFragment as? SourcesFragment)?.showPasteNotes()
         dismiss()
     }
 
