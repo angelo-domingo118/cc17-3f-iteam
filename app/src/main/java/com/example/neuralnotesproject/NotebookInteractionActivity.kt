@@ -36,6 +36,10 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -57,6 +61,8 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private var selectedSourcesContent: String = ""
 
     private val chatContext = mutableListOf<Message>()
+    private var selectedFileUri: Uri? = null
+    private var selectedWebsiteUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,6 +156,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
         selectedSourcesContent = sources.joinToString("\n\n") { "${it.name}\n${it.content}" }
     }
 
+    fun onFileSelected(uri: Uri) {
+        selectedFileUri = uri
+    }
+
+    fun onWebsiteUrlSelected(url: String) {
+        selectedWebsiteUrl = url
+    }
+
     private fun sendMessage(message: String) {
         if (message.isEmpty()) {
             showError("Message cannot be empty")
@@ -170,43 +184,69 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 chatContext.add(aiMessage)
                 messageAdapter.notifyItemInserted(chatContext.size - 1)
                 recyclerView.scrollToPosition(chatContext.size - 1)
+                
+                // Clear the selected file and website URL after processing
+                selectedFileUri = null
+                selectedWebsiteUrl = null
             } catch (e: Exception) {
                 showError("Failed to generate AI response: ${e.message}")
             }
         }
     }
 
-    private fun buildPromptWithContext(userMessage: String): String {
-        val contextPrompt = when {
-            selectedNotesContent.isNotEmpty() && selectedSourcesContent.isNotEmpty() -> {
-                "The following are selected notes and sources from the user's notebook:\n\n" +
-                "Notes:\n$selectedNotesContent\n\n" +
-                "Sources:\n$selectedSourcesContent\n\n" +
-                "Please consider this information as context for your response. " +
-                "If relevant, refer to or incorporate details from these notes and sources in your answer."
-            }
-            selectedNotesContent.isNotEmpty() -> {
-                "The following are selected notes from the user's notebook:\n\n$selectedNotesContent\n\n" +
-                "Please consider this information as context for your response. " +
-                "If relevant, refer to or incorporate details from these notes in your answer."
-            }
-            selectedSourcesContent.isNotEmpty() -> {
-                "The following are selected sources from the user's notebook:\n\n$selectedSourcesContent\n\n" +
-                "Please consider this information as context for your response. " +
-                "If relevant, refer to or incorporate details from these sources in your answer."
-            }
-            else -> {
-                "You are an AI assistant in a note-taking app. " +
-                "The user can create notebooks, add notes, and import sources. " +
-                "They can also chat with you for assistance or insights related to their notes and sources."
-            }
+    private suspend fun buildPromptWithContext(userMessage: String): String {
+        val contextPrompt = StringBuilder()
+
+        if (selectedNotesContent.isNotEmpty()) {
+            contextPrompt.append("Selected notes:\n$selectedNotesContent\n\n")
         }
+        if (selectedSourcesContent.isNotEmpty()) {
+            contextPrompt.append("Selected sources:\n$selectedSourcesContent\n\n")
+        }
+        
+        selectedFileUri?.let { uri ->
+            contextPrompt.append("The following is content from an uploaded document:\n")
+            contextPrompt.append(getFileContent(uri))
+            contextPrompt.append("\n\n")
+        }
+
+        selectedWebsiteUrl?.let { url ->
+            contextPrompt.append("The following is content from a website that has been added as a source:\n")
+            contextPrompt.append(fetchWebsiteContent(url))
+            contextPrompt.append("\n\n")
+        }
+
+        contextPrompt.append("Please consider this information as context for your response. ")
+        contextPrompt.append("If relevant, refer to or incorporate details from these notes, sources, uploaded documents, and websites in your answer.\n\n")
 
         val chatHistory = chatContext.takeLast(10).joinToString("\n") { 
             if (it.isUser) "User: ${it.content}" else "AI: ${it.content}"
         }
 
-        return "$contextPrompt\n\nChat history:\n$chatHistory\n\nUser: $userMessage\n\nAI:"
+        return "${contextPrompt}Chat history:\n$chatHistory\n\nUser: $userMessage\n\nAI:"
+    }
+
+    private suspend fun fetchWebsiteContent(url: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = URL(url).readText()
+                response
+            } catch (e: Exception) {
+                Log.e("NotebookInteractionActivity", "Error fetching website content", e)
+                "Error fetching website content: ${e.message}"
+            }
+        }
+    }
+
+    private fun getFileContent(uri: Uri): String {
+        return try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                inputStream.bufferedReader().use { it.readText() }
+            } ?: "Unable to read file content"
+        } catch (e: Exception) {
+            Log.e("NotebookInteractionActivity", "Error reading file content", e)
+            "Error reading file content: ${e.message}"
+        }
     }
 
     private fun onSaveButtonClick(message: Message) {
@@ -228,6 +268,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         try {
             noteFile.writeText("Untitled Note\n$content")
             Toast.makeText(this, "Message saved to notes", Toast.LENGTH_SHORT).show()
+            notesFragment?.refreshNotes() // Add this line to refresh notes
         } catch (e: IOException) {
             Log.e("NotebookInteractionActivity", "Error saving message to notes", e)
             Toast.makeText(this, "Failed to save message", Toast.LENGTH_SHORT).show()
@@ -377,6 +418,8 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 .show(notesFragment!!)
                 .commit()
         }
+        supportFragmentManager.executePendingTransactions() // Add this line
+        notesFragment?.refreshNotes()
         currentFragment = notesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
@@ -391,9 +434,11 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private fun hideCurrentFragment() {
         currentFragment?.let { fragment ->
-            supportFragmentManager.beginTransaction()
-                .hide(fragment)
-                .commit()
+            if (fragment.isAdded) { // Add this check
+                supportFragmentManager.beginTransaction()
+                    .hide(fragment)
+                    .commit()
+            }
         }
     }
 

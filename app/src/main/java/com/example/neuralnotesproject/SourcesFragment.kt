@@ -20,9 +20,11 @@ import com.example.neuralnotesproject.Source
 import com.example.neuralnotesproject.SourceType
 import java.io.File
 import java.util.UUID
+import android.provider.OpenableColumns
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
+    fun onWebsiteUrlSelected(url: String)
 }
 
 class SourcesFragment : Fragment(), SourceActionListener {
@@ -106,17 +108,40 @@ class SourcesFragment : Fragment(), SourceActionListener {
     }
 
     override fun onFileSelected(uri: Uri) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                // Removed: val (title, extractedText) = geminiTextExtractor.extractTextFromFile(uri, notebookId)
-                // TODO: Implement a new method to extract text from the file
-                val title = "File Title" // Placeholder
-                val extractedText = "Extracted Text" // Placeholder
-                addNewSource(title, extractedText, SourceType.FILE)
-                addNoteToNotesFragment(title, extractedText)
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error processing file: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        val notebookId = arguments?.getString("notebookId") ?: return
+        val sourceDir = File(requireContext().filesDir, "$notebookId/sources")
+        sourceDir.mkdirs()
+
+        val sourceId = UUID.randomUUID().toString()
+        val source = Source(
+            id = sourceId,
+            name = uri.toString(),
+            type = SourceType.FILE,
+            content = uri.toString()  // Store the URI as a string
+        )
+
+        addSource(source)
+        (activity as? NotebookInteractionActivity)?.onFileSelected(uri)
+    }
+
+    override fun onWebsiteUrlSelected(url: String) {
+        val sourceId = UUID.randomUUID().toString()
+        val source = Source(
+            id = sourceId,
+            name = url,
+            type = SourceType.WEBSITE,
+            content = url
+        )
+        addSource(source)
+        (activity as? NotebookInteractionActivity)?.onWebsiteUrlSelected(url)
+    }
+
+    private fun getFileName(uri: Uri): String? {
+        val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+        return cursor?.use {
+            val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            it.moveToFirst()
+            it.getString(nameIndex)
         }
     }
 
@@ -166,7 +191,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
         sourceDir.mkdirs()
 
         val file = File(sourceDir, "${source.id}.txt")
-        file.writeText("${source.name}\n${source.content}")
+        file.writeText("${source.name}\n${source.type}\n${source.content}")
     }
 
     private fun deleteSourcesFromStorage(notebookId: String, sourcesToDelete: List<Source>) {

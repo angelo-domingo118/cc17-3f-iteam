@@ -136,6 +136,16 @@ class NotesFragment : Fragment() {
         }
     }
 
+    fun refreshNotes() {
+        notes = FileUtils.loadNotes(requireContext(), notebookId).toMutableList()
+        noteAdapter.updateNotes(notes)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshNotes()
+    }
+
     companion object {
         const val EXTRA_NOTE_ID = "extra_note_id"
         const val EXTRA_NOTE_TITLE = "extra_note_title"

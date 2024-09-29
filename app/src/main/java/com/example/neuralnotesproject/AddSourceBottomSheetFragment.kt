@@ -16,8 +16,9 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                // Handle the selected file
+                // Pass the URI to the SourcesFragment
                 (parentFragment as? SourceActionListener)?.onFileSelected(uri)
+                dismiss()
             }
         }
     }
@@ -54,9 +55,21 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun showWebsiteUrlInput() {
-        val websiteUrlFragment = WebsiteUrlInputFragment()
-        websiteUrlFragment.show(parentFragmentManager, "WebsiteUrlInputFragment")
-        dismiss()
+        // Remove the creation of WebsiteUrlInputFragment
+        // Instead, navigate to a new activity or fragment using layout_website_url_input.xml
+        val intent = Intent(context, WebsiteUrlInputActivity::class.java)
+        startActivityForResult(intent, WEBSITE_URL_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == WEBSITE_URL_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            val url = data?.getStringExtra(WebsiteUrlInputActivity.EXTRA_WEBSITE_URL)
+            url?.let {
+                (parentFragment as? SourceActionListener)?.onWebsiteUrlSelected(it)
+                dismiss()
+            }
+        }
     }
 
     private fun showPasteNotes() {
@@ -66,5 +79,6 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "AddSourceBottomSheetFragment"
+        private const val WEBSITE_URL_REQUEST_CODE = 1001
     }
 }
