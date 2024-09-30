@@ -21,6 +21,7 @@ import com.example.neuralnotesproject.SourceType
 import java.io.File
 import java.util.UUID
 import android.provider.OpenableColumns
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -61,7 +62,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
         recyclerView.adapter = sourceAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        view.findViewById<ImageButton>(R.id.btn_add_source).setOnClickListener {
+        view.findViewById<FloatingActionButton>(R.id.btn_add_source).setOnClickListener {
             showAddSourceBottomSheet()
         }
 
