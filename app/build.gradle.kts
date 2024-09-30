@@ -52,6 +52,7 @@ dependencies {
 
     // Gemini AI
     implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
+    implementation(libs.androidx.material3.android)
 
     // Testing
     testImplementation("junit:junit:4.13.2")

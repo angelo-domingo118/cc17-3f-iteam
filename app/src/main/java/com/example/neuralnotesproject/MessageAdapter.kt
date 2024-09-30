@@ -88,7 +88,7 @@ class MessageAdapter(
         updateLikeDislikeButtonStates(holder, message)
     }
 
-    private fun toggleLikeDislike(holder: AIMessageViewHolder, message: Message, isLike: Boolean) {
+    private   fun toggleLikeDislike(holder: AIMessageViewHolder, message: Message, isLike: Boolean) {
         val context = holder.itemView.context
         if (isLike) {
             message.isLiked = !message.isLiked

@@ -64,6 +64,10 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private var selectedFileUri: Uri? = null
     private var selectedWebsiteUrl: String? = null
 
+    private lateinit var btnSource: MaterialButton
+    private lateinit var btnNotes: MaterialButton
+    private lateinit var btnChat: MaterialButton
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notebook_interaction)
@@ -144,6 +148,38 @@ class NotebookInteractionActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btn_chat).setOnClickListener {
             showChatView()
         }
+
+        initializeViews()
+        setupListeners()
+    }
+
+    private fun initializeViews() {
+        btnSource = findViewById(R.id.btn_source)
+        btnNotes = findViewById(R.id.btn_notes)
+        btnChat = findViewById(R.id.btn_chat)
+    }
+
+    private fun setupListeners() {
+        btnSource.setOnClickListener {
+            showSourcesFragment()
+            updateButtonStates(btnSource)
+        }
+
+        btnNotes.setOnClickListener {
+            showNotesFragment()
+            updateButtonStates(btnNotes)
+        }
+
+        btnChat.setOnClickListener {
+            showChatView()
+            updateButtonStates(btnChat)
+        }
+    }
+
+    private fun updateButtonStates(selectedButton: MaterialButton) {
+        btnSource.isSelected = selectedButton == btnSource
+        btnNotes.isSelected = selectedButton == btnNotes
+        btnChat.isSelected = selectedButton == btnChat
     }
 
     fun onSelectedNotesChanged(notes: List<Note>) {
