@@ -1,6 +1,7 @@
 package com.example.neuralnotesproject
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -29,12 +30,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.Observer
 import java.io.*
 import androidx.activity.result.contract.ActivityResultContracts
+import android.text.TextWatcher
+import android.text.Editable
+import androidx.annotation.RequiresApi
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.view.MotionEvent
+import android.graphics.drawable.GradientDrawable
+import androidx.core.content.ContextCompat
+import androidx.cardview.widget.CardView
+import android.widget.FrameLayout
+import android.graphics.Rect
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var notebookListContainer: RecyclerView
     private lateinit var notebookAdapter: NotebookAdapter
     private lateinit var notebookViewModel: NotebookViewModel
+
+    private lateinit var etSearch: EditText
+    private var allNotebooks: List<Notebook> = emptyList()
 
     private val notebookInteractionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -59,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -70,9 +86,21 @@ class MainActivity : AppCompatActivity() {
         observeNotebooks()
 
         val btnNewNotebook: MaterialButton = findViewById(R.id.btn_new_notebook)
+        setupAddNotebookButtonAnimation(btnNewNotebook)
         btnNewNotebook.setOnClickListener {
             addNewNotebook()
         }
+
+        etSearch = findViewById(R.id.et_search)
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                filterNotebooks(s.toString())
+            }
+            
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     private fun setupRecyclerView() {
@@ -87,10 +115,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeNotebooks() {
         notebookViewModel.notebooks.observe(this) { notebooks ->
-            notebookAdapter.updateNotebooks(notebooks)
+            allNotebooks = notebooks
+            filterNotebooks(etSearch.text.toString())
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun addNewNotebook() {
         val currentDateTime = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy HH:mm:ss")
@@ -182,7 +212,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         popupWindow.elevation = 10f
-        popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
+        
+        // Calculate the position of the popup
+        val location = IntArray(2)
+        anchorView.getLocationInWindow(location)
+        val anchorRect = Rect(location[0], location[1], location[0] + anchorView.width, location[1] + anchorView.height)
+        
+        // Measure the popup view
+        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+        
+        // Calculate the x position (align right sides)
+        val xPos = anchorRect.right - popupView.measuredWidth
+        
+        // Calculate the y position (slightly below the anchor view)
+        val yPos = anchorRect.bottom + 10 // 10dp padding below the anchor view
+        
+        // Show the popup
+        popupWindow.showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
     }
 
     private fun deleteNotebook(position: Int) {
@@ -246,6 +292,76 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+    private fun filterNotebooks(query: String) {
+        val filteredList = if (query.isEmpty()) {
+            allNotebooks
+        } else {
+            allNotebooks.filter { it.title.contains(query, ignoreCase = true) }
+        }
+        notebookAdapter.updateNotebooks(filteredList)
+    }
+
+    private fun setupAddNotebookButtonAnimation(button: MaterialButton) {
+        val scaleUpX = ObjectAnimator.ofFloat(button, "scaleX", 1f, 1.05f)
+        val scaleUpY = ObjectAnimator.ofFloat(button, "scaleY", 1f, 1.05f)
+        val scaleDownX = ObjectAnimator.ofFloat(button, "scaleX", 1.05f, 1f)
+        val scaleDownY = ObjectAnimator.ofFloat(button, "scaleY", 1.05f, 1f)
+
+        val scaleUp = AnimatorSet().apply {
+            playTogether(scaleUpX, scaleUpY)
+            duration = 100
+        }
+
+        val scaleDown = AnimatorSet().apply {
+            playTogether(scaleDownX, scaleDownY)
+            duration = 100
+        }
+
+        button.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    scaleUp.start()
+                    darkenButtonColor(button)
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    scaleDown.start()
+                    resetButtonColor(button)
+                }
+            }
+            false
+        }
+    }
+
+    private fun darkenButtonColor(button: MaterialButton) {
+        val drawable = button.background as? GradientDrawable
+        drawable?.let {
+            val darkerStartColor = manipulateColor(ContextCompat.getColor(this, R.color.gradient_start), 0.8f)
+            val darkerEndColor = manipulateColor(ContextCompat.getColor(this, R.color.gradient_end), 0.8f)
+            it.colors = intArrayOf(darkerStartColor, darkerEndColor)
+        }
+    }
+
+    private fun resetButtonColor(button: MaterialButton) {
+        val drawable = button.background as? GradientDrawable
+        drawable?.let {
+            val startColor = ContextCompat.getColor(this, R.color.gradient_start)
+            val endColor = ContextCompat.getColor(this, R.color.gradient_end)
+            it.colors = intArrayOf(startColor, endColor)
+        }
+    }
+
+    private fun manipulateColor(color: Int, factor: Float): Int {
+        val a = color and 0xff000000.toInt()
+        val r = (color and 0x00ff0000) shr 16
+        val g = (color and 0x0000ff00) shr 8
+        val b = color and 0x000000ff
+
+        return a or
+                ((r * factor).toInt() shl 16) or
+                ((g * factor).toInt() shl 8) or
+                (b * factor).toInt()
+    }
 }
 
 data class Notebook(
@@ -265,6 +381,9 @@ class NotebookAdapter(
         val titleTextView: TextView = view.findViewById(R.id.tv_notebook_title)
         val dateTextView: TextView = view.findViewById(R.id.tv_creation_date)
         val optionsButton: ImageView = view.findViewById(R.id.iv_more_options)
+        val notebookIcon: ImageView = view.findViewById(R.id.iv_notebook_icon)
+        val notebookIconFrame: FrameLayout = view.findViewById(R.id.fl_notebook_icon)
+        val cardView: CardView = view as CardView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -280,9 +399,84 @@ class NotebookAdapter(
         holder.optionsButton.setOnClickListener { view ->
             onOptionsClick(view, position)
         }
-        holder.itemView.setOnClickListener {
-            onNotebookClick(position)
+
+        // Set up touch listener for the entire item view
+        holder.itemView.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    animateItem(holder, true)
+                    v.isPressed = true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    animateItem(holder, false)
+                    v.isPressed = false
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        onNotebookClick(position)
+                    }
+                }
+            }
+            true
         }
+
+        // Reset the item appearance when it's recycled
+        holder.itemView.isPressed = false
+        resetItemAppearance(holder)
+    }
+
+    private fun animateItem(holder: ViewHolder, isPressed: Boolean) {
+        val context = holder.itemView.context
+        if (isPressed) {
+            // Animate notebook icon
+            holder.notebookIcon.animate()
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(100)
+                .start()
+
+            // Change text color
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.gradient_end))
+            holder.dateTextView.setTextColor(ContextCompat.getColor(context, R.color.gradient_start))
+
+            // Increase card elevation
+            holder.cardView.animate()
+                .translationZ(8f)
+                .setDuration(100)
+                .start()
+
+            // Change notebook icon background color
+            (holder.notebookIconFrame.background as? GradientDrawable)?.colors = intArrayOf(
+                ContextCompat.getColor(context, R.color.gradient_start),
+                ContextCompat.getColor(context, R.color.gradient_end)
+            )
+        } else {
+            resetItemAppearance(holder)
+        }
+    }
+
+    private fun resetItemAppearance(holder: ViewHolder) {
+        val context = holder.itemView.context
+        // Reset notebook icon size
+        holder.notebookIcon.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(100)
+            .start()
+
+        // Reset text color
+        holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.dark_violet))
+        holder.dateTextView.setTextColor(ContextCompat.getColor(context, R.color.secondary_text_color))
+
+        // Reset card elevation
+        holder.cardView.animate()
+            .translationZ(2f)
+            .setDuration(100)
+            .start()
+
+        // Reset notebook icon background color
+        (holder.notebookIconFrame.background as? GradientDrawable)?.colors = intArrayOf(
+            ContextCompat.getColor(context, R.color.gradient_start),
+            ContextCompat.getColor(context, R.color.gradient_end)
+        )
     }
 
     override fun getItemCount() = notebooks.size

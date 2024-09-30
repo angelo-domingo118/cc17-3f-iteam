@@ -39,4 +39,13 @@
     <!-- New colors for like/dislike buttons -->
     <color name="like_button_active">#1976D2</color>
     <color name="like_button_inactive">#BDBDBD</color>
+    
+    <!-- New colors for gradient and chevron -->
+    <color name="gradient_start">#6366F1</color>
+    <color name="gradient_end">#A855F7</color>
+    <color name="chevron_color">#6366F1</color>
+    <color name="more_options_color">#6366F1</color>
+    
+    <!-- New color for darker shade of violet -->
+    <color name="dark_violet">#4C1D95</color>
 </resources>

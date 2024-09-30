@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Neural Notes Project</string>
+    <string name="app_name">Neuro Notes</string>
     <string name="content_description_logo">App Logo</string>
-    <string name="greeting_placeholder">Hello, User!</string>
-    <string name="new_notebook">New Notebook</string>
+    <string name="greeting_placeholder">Good morning, Angelo</string>
+    <string name="greeting_message">Unlock your mind\'s potential with AI-powered note-taking and intelligent conversations.</string>
+    <string name="new_notebook">Create New Notebook</string>
     <string name="content_description_notebook_icon">Notebook Icon</string>
-    <string name="content_description_more_options">More Options</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
     <string name="type_to_make_your_notes">Type to make your notes</string>
@@ -37,9 +37,14 @@
     <string name="select_all">Select All</string>
     <string name="unselect_all">Unselect All</string>
     <string name="title">Title</string>
-    <string name="type_message_hint">Ask me anything...</string>
-    <string name="note_title_hint">Placeholder\n</string>
-    <string name="note_content_hint">Placeholder\n</string>
-    <string name="save_note">Save\n</string>
-    <string name="back_button">Back\n</string>
+    <string name="type_message_hint">Ask me anything…</string>
+    <string name="note_title_hint">Placeholder</string>
+    <string name="note_content_hint">Placeholder</string>
+    <string name="save_note">Save</string>
+    <string name="back_button">Back</string>
+    <string name="content_description_chevron">Chevron icon</string>
+    <string name="content_description_more_options">More options</string>
+    <string name="search_notebooks">Search notebooks…</string>
+    <string name="rename_icon">Rename icon</string>
+    <string name="delete_icon">Delete icon</string>
 </resources>

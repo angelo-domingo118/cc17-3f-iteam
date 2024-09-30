@@ -6,80 +6,89 @@
     android:id="@+id/main_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F0F0F0">
+    android:background="@drawable/main_background">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:paddingTop="24dp"
         app:elevation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:paddingBottom="16dp">
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:id="@+id/iv_logo"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
-                android:contentDescription="@string/content_description_logo"
-                android:src="@drawable/ic_logo_placeholder"
-                app:layout_constraintBottom_toBottomOf="parent"
+            <FrameLayout
+                android:id="@+id/fl_user_profile"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/gradient_circle_background"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_user_profile"
+                    android:layout_gravity="center"
+                    app:tint="@color/dark_violet"/>
+            </FrameLayout>
 
             <TextView
-                android:id="@+id/tv_greeting"
-                android:layout_width="0dp"
+                android:id="@+id/tv_app_name"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/greeting_placeholder"
-                android:textAlignment="center"
-                android:textColor="#2196F3"
-                android:textSize="32sp"
+                android:text="@string/app_name"
+                android:textSize="18sp"
+                android:textColor="@color/dark_violet"
                 android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginStart="12dp"
+                app:layout_constraintStart_toEndOf="@id/fl_user_profile"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-            <ImageView
-                android:id="@+id/iv_profile_picture"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/circle_background"
-                android:padding="8dp"
-                android:src="@drawable/ic_person"
+            <FrameLayout
+                android:id="@+id/fl_search"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/gradient_circle_background"
+                app:layout_constraintEnd_toStartOf="@id/fl_theme_toggle"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginEnd="12dp">
+
+                <ImageView
+                    android:id="@+id/iv_search"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_search"
+                    android:layout_gravity="center"
+                    app:tint="@color/dark_violet"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/fl_theme_toggle"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/gradient_circle_background"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="#2196F3" />
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageView
+                    android:id="@+id/iv_theme_toggle"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_dark_mode_hollow_moon"
+                    android:layout_gravity="center"
+                    app:tint="@color/dark_violet"/>
+            </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_new_notebook"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#2196F3"
-            android:paddingVertical="12dp"
-            android:text="@string/new_notebook"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            app:cornerRadius="24dp"
-            app:icon="@drawable/ic_add"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:iconSize="24dp"
-            app:iconTint="#FFFFFF" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -88,13 +97,70 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/notebook_list_container"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false"
+            android:orientation="vertical"
             android:paddingTop="16dp"
-            android:paddingBottom="16dp" />
+            android:paddingBottom="16dp">
+
+            <!-- Greeting Card -->
+            <include 
+                layout="@layout/greeting_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Search Input -->
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/search_background"
+                android:hint="@string/search_notebooks"
+                android:padding="12dp"
+                android:textColorHint="#9CA3AF"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="8dp"
+                android:drawableTint="@color/dark_violet"
+                android:inputType="text"/>
+
+            <!-- Create New Notebook Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_new_notebook"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/new_notebook"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:backgroundTint="@null"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconSize="20dp"
+                app:iconTint="#FFFFFF"
+                app:rippleColor="#FFFFFF"
+                app:cornerRadius="8dp"
+                android:background="@drawable/gradient_button_background"/>
+
+            <!-- RecyclerView for notebooks -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/notebook_list_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="16dp" />
+
+        </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
