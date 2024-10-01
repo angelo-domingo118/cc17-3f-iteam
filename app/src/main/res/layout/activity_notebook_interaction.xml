@@ -23,14 +23,14 @@
                 android:id="@+id/header_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
+                android:padding="8dp"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
                     android:id="@+id/iv_back"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="8dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
                     android:src="@drawable/ic_back"
                     android:contentDescription="@string/back"
                     app:layout_constraintStart_toStartOf="parent"
@@ -46,7 +46,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/title"
                     android:textColor="#000000"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:gravity="center"
                     app:layout_constraintStart_toEndOf="@id/iv_back"
@@ -56,9 +56,9 @@
 
                 <ImageView
                     android:id="@+id/iv_more_options"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="8dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
                     android:src="@drawable/ic_more"
                     android:contentDescription="@string/more_options"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -75,17 +75,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="4dp"
+                android:padding="2dp"
                 app:layout_constraintTop_toBottomOf="@id/header_content">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_source"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_weight="1"
                     android:text="@string/source"
                     android:textColor="#000000"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     app:backgroundTint="@null"
                     android:background="@drawable/nav_button_background" />
@@ -93,11 +93,11 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_notes"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_weight="1"
                     android:text="@string/notes"
                     android:textColor="#000000"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     app:backgroundTint="@null"
                     android:background="@drawable/nav_button_background" />
@@ -105,11 +105,11 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_chat"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_weight="1"
                     android:text="@string/chat"
                     android:textColor="#000000"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     app:backgroundTint="@null"
                     android:background="@drawable/nav_button_background" />
@@ -140,7 +140,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        android:padding="16dp"
+        android:padding="8dp"
         android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -152,16 +152,20 @@
             app:layout_constraintEnd_toStartOf="@id/btn_send"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            app:layout_constraintBottom_toBottomOf="parent"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_user_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/type_message_hint"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textColor="#000000"
-                android:textColorHint="#757575" />
+                android:textColorHint="#757575"
+                android:minHeight="40dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -171,10 +175,11 @@
             android:src="@drawable/ic_send"
             android:contentDescription="@string/send"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/til_user_input"
-            app:layout_constraintBottom_toBottomOf="@id/til_user_input"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:backgroundTint="#2196F3"
-            app:tint="@android:color/white" />
+            app:tint="@android:color/white"
+            app:fabSize="mini" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -66,7 +66,7 @@ class NotesFragment : Fragment() {
         recyclerView.adapter = noteAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        view.findViewById<FloatingActionButton>(R.id.btn_add_note).setOnClickListener {
+        view.findViewById<MaterialButton>(R.id.btn_add_note).setOnClickListener {
             launchEditNoteActivity()
         }
 

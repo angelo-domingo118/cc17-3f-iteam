@@ -62,7 +62,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
         recyclerView.adapter = sourceAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
-        view.findViewById<FloatingActionButton>(R.id.btn_add_source).setOnClickListener {
+        view.findViewById<MaterialButton>(R.id.btn_add_source).setOnClickListener {
             showAddSourceBottomSheet()
         }
 
