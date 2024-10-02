@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_blue_background"
+    android:background="@color/light_purple"
     android:padding="24dp">
 
     <ImageButton
@@ -14,7 +14,7 @@
         android:src="@drawable/ic_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/primaryColor" />
+        app:tint="@color/gradient_end" />
 
     <TextView
         android:id="@+id/tv_title"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Paste copied text"
-        android:textColor="@android:color/black"
+        android:textColor="@color/dark_violet"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Paste your copied text below to upload as a source in Neuro Notes."
-        android:textColor="@android:color/black"
+        android:textColor="@color/dark_violet"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_title" />
@@ -45,7 +45,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"
-        app:boxBackgroundColor="@android:color/white"
+        app:boxBackgroundColor="@color/action_bar_background"
         app:layout_constraintTop_toBottomOf="@id/tv_instruction"
         app:layout_constraintBottom_toTopOf="@id/btn_insert">
 
@@ -55,7 +55,7 @@
             android:layout_height="match_parent"
             android:gravity="top"
             android:inputType="textMultiLine"
-            android:background="@android:color/white"
+            android:background="@color/button_text_color"
             android:padding="12dp"
             android:textSize="18sp"
             android:hint="Paste text here*" />
@@ -71,12 +71,12 @@
         android:text="Insert"
         android:textColor="@android:color/white"
         android:textSize="18sp"
-        app:backgroundTint="@color/primaryColor"
+        app:backgroundTint="@color/gradient_end"
         app:cornerRadius="8dp"
         app:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:rippleColor="@color/more_options_icon_tint" />
+        app:rippleColor="@color/dark_violet" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

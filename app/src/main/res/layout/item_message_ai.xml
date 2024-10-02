@@ -13,7 +13,7 @@
         android:id="@+id/messageContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/ai_message_background"
+        app:cardBackgroundColor="@color/light_purple"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
                 android:id="@+id/messageText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/ai_message_text"
+                android:textColor="@color/dark_violet"
                 android:textSize="16sp" />
 
             <LinearLayout
@@ -47,7 +47,7 @@
                     android:minHeight="0dp"
                     android:padding="4dp"
                     app:icon="@drawable/ic_copy"
-                    app:iconTint="@color/ai_message_icon" />
+                    app:iconTint="@color/dark_violet" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLike"
@@ -58,7 +58,7 @@
                     android:minHeight="0dp"
                     android:padding="4dp"
                     app:icon="@drawable/ic_like"
-                    app:iconTint="@color/like_button_inactive" />
+                    app:iconTint="@color/gradient_end" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDislike"
@@ -69,7 +69,7 @@
                     android:minHeight="0dp"
                     android:padding="4dp"
                     app:icon="@drawable/ic_dislike"
-                    app:iconTint="@color/like_button_inactive" />
+                    app:iconTint="@color/gradient_end" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSave"
@@ -80,7 +80,7 @@
                     android:minHeight="0dp"
                     android:padding="4dp"
                     app:icon="@drawable/ic_save"
-                    app:iconTint="@color/ai_message_icon" />
+                    app:iconTint="@color/dark_violet" />
 
             </LinearLayout>
         </LinearLayout>

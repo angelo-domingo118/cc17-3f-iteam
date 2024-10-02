@@ -40,6 +40,7 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
+import android.graphics.Paint
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -162,17 +163,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private fun setupListeners() {
         btnSource.setOnClickListener {
             showSourcesFragment()
-            updateButtonStates(btnSource)
         }
 
         btnNotes.setOnClickListener {
             showNotesFragment()
-            updateButtonStates(btnNotes)
         }
 
         btnChat.setOnClickListener {
             showChatView()
-            updateButtonStates(btnChat)
         }
     }
 
@@ -440,6 +438,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         currentFragment = sourcesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+        updateButtonStates(btnSource)
     }
 
     private fun showNotesFragment() {
@@ -459,6 +458,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         currentFragment = notesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+        updateButtonStates(btnNotes)
     }
 
     private fun showChatView() {
@@ -466,6 +466,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
         currentFragment = null
+        updateButtonStates(btnChat)
     }
 
     private fun hideCurrentFragment() {
