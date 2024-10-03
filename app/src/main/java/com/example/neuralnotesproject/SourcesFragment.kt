@@ -22,6 +22,7 @@ import java.io.File
 import java.util.UUID
 import android.provider.OpenableColumns
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.util.Log
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -114,15 +115,29 @@ class SourcesFragment : Fragment(), SourceActionListener {
         sourceDir.mkdirs()
 
         val sourceId = UUID.randomUUID().toString()
+        val fileContent = getFileContent(uri) // Function to read file content from URI
+
         val source = Source(
             id = sourceId,
-            name = uri.toString(),
+            name = getFileName(uri) ?: "Unnamed File",
             type = SourceType.FILE,
-            content = uri.toString()  // Store the URI as a string
+            content = fileContent // Store actual content
         )
 
         addSource(source)
         (activity as? NotebookInteractionActivity)?.onFileSelected(uri)
+    }
+
+    // Helper function to read file content
+    private fun getFileContent(uri: Uri): String {
+        return try {
+            requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
+                inputStream.bufferedReader().use { it.readText() }
+            } ?: "Unable to read file content"
+        } catch (e: Exception) {
+            Log.e("SourcesFragment", "Error reading file content", e)
+            "Error reading file content: ${e.message}"
+        }
     }
 
     override fun onWebsiteUrlSelected(url: String) {
@@ -173,11 +188,11 @@ class SourcesFragment : Fragment(), SourceActionListener {
             sourceDir.listFiles()?.forEach { file ->
                 if (file.isFile && file.extension == "txt") {
                     val lines = file.readLines()
-                    if (lines.isNotEmpty()) {
+                    if (lines.size >= 3) { // Assuming format: name, type, content
                         val id = file.nameWithoutExtension
                         val name = lines[0]
-                        val content = if (lines.size > 1) lines.subList(1, lines.size).joinToString("\n") else ""
-                        val type = SourceType.FILE // Assuming all stored sources are files for now
+                        val type = SourceType.valueOf(lines[1])
+                        val content = lines.subList(2, lines.size).joinToString("\n")
                         sources.add(Source(id, name, type, content))
                     }
                 }

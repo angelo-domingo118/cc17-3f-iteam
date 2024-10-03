@@ -44,14 +44,14 @@ dependencies {
 
     // ViewModel and LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.4")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.6")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.2")
 
     // RecyclerView
-    implementation("androidx.recyclerview:recyclerview:1.3.1")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // Gemini AI
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation(libs.generativeai)
     implementation(libs.androidx.material3.android)
 
     // Testing

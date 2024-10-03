@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
 import android.graphics.Paint
+import android.widget.ProgressBar
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -68,6 +69,9 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var btnSource: MaterialButton
     private lateinit var btnNotes: MaterialButton
     private lateinit var btnChat: MaterialButton
+
+    private lateinit var progressBar: ProgressBar
+    private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +114,9 @@ class NotebookInteractionActivity : AppCompatActivity() {
             }
         )
 
+        progressBar = findViewById(R.id.progressBar)
+        progressBar.visibility = View.GONE
+
         sendButton.setOnClickListener {
             val message = inputEditText.text.toString().trim()
             if (message.isNotEmpty()) {
@@ -118,8 +125,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
                     // If in a fragment, switch to chat view before sending the message
                     showChatView()
                 }
-                sendMessage(message)
-                inputEditText.text?.clear()
+                sendMessage()
             }
         }
 
@@ -198,58 +204,86 @@ class NotebookInteractionActivity : AppCompatActivity() {
         selectedWebsiteUrl = url
     }
 
-    private fun sendMessage(message: String) {
-        if (message.isEmpty()) {
-            showError("Message cannot be empty")
-            return
-        }
+    private fun sendMessage() {
+        val message = inputEditText.text.toString().trim()
+        if (message.isNotEmpty()) {
+            setLoadingState(true)
+            
+            val userMessage = Message(message, true)
+            messageAdapter.addMessage(userMessage)
+            // Remove this line to prevent duplication
+            // chatContext.add(userMessage)
+            inputEditText.text?.clear()
 
-        val userMessage = Message(message, true)
-        chatContext.add(userMessage)
-        messageAdapter.notifyItemInserted(chatContext.size - 1)
-        recyclerView.scrollToPosition(chatContext.size - 1)
-
-        lifecycleScope.launch {
-            try {
-                val prompt = buildPromptWithContext(message)
-                val response = generativeModel.generateContent(prompt)
-                val aiResponse = response.text ?: "Sorry, I couldn't generate a response."
-                val aiMessage = Message(aiResponse, false)
-                chatContext.add(aiMessage)
-                messageAdapter.notifyItemInserted(chatContext.size - 1)
-                recyclerView.scrollToPosition(chatContext.size - 1)
-                
-                // Clear the selected file and website URL after processing
-                selectedFileUri = null
-                selectedWebsiteUrl = null
-            } catch (e: Exception) {
-                showError("Failed to generate AI response: ${e.message}")
+            lifecycleScope.launch {
+                try {
+                    val prompt = buildPromptWithContext(message)
+                    val response = generativeModel.generateContent(prompt)
+                    val aiResponse = response.text ?: "Sorry, I couldn't generate a response."
+                    val aiMessage = Message(aiResponse, false)
+                    messageAdapter.addMessage(aiMessage)
+                    // Remove this line to prevent duplication
+                    // chatContext.add(aiMessage)
+                    recyclerView.scrollToPosition(messageAdapter.itemCount - 1)
+                    
+                    // Clear the selected file and website URL after processing
+                    selectedFileUri = null
+                    selectedWebsiteUrl = null
+                } catch (e: Exception) {
+                    showError("Failed to generate AI response: ${e.message}")
+                } finally {
+                    setLoadingState(false)
+                }
             }
+        }
+    }
+
+    private fun setLoadingState(loading: Boolean) {
+        isLoading = loading
+        inputEditText.isEnabled = !loading
+        sendButton.isEnabled = !loading
+        
+        if (loading) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (isLoading) {
+                    progressBar.visibility = View.VISIBLE
+                }
+            }, 300) // Show loading indicator after 300ms if still loading
+        } else {
+            progressBar.visibility = View.GONE
         }
     }
 
     private suspend fun buildPromptWithContext(userMessage: String): String {
         val contextPrompt = StringBuilder()
 
+        // Append selected notes
         if (selectedNotesContent.isNotEmpty()) {
             contextPrompt.append("Selected notes:\n$selectedNotesContent\n\n")
         }
-        if (selectedSourcesContent.isNotEmpty()) {
-            contextPrompt.append("Selected sources:\n$selectedSourcesContent\n\n")
-        }
         
-        selectedFileUri?.let { uri ->
-            contextPrompt.append("The following is content from an uploaded document:\n")
-            contextPrompt.append(getFileContent(uri))
-            contextPrompt.append("\n\n")
+        // Append selected sources
+        if (selectedSources.isNotEmpty()) {
+            contextPrompt.append("Selected sources:\n")
+            selectedSources.forEach { source ->
+                when (source.type) {
+                    SourceType.FILE -> {
+                        contextPrompt.append("File Name: ${source.name}\n")
+                        contextPrompt.append("Content:\n${source.content}\n\n")
+                    }
+                    SourceType.WEBSITE -> {
+                        contextPrompt.append("Website URL: ${source.name}\n")
+                        contextPrompt.append("Content:\n${fetchWebsiteContent(source.content)}\n\n")
+                    }
+                    SourceType.TEXT -> {
+                        contextPrompt.append("Text Source: ${source.name}\n")
+                        contextPrompt.append("Content:\n${source.content}\n\n")
+                    }
+                }
+            }
         }
 
-        selectedWebsiteUrl?.let { url ->
-            contextPrompt.append("The following is content from a website that has been added as a source:\n")
-            contextPrompt.append(fetchWebsiteContent(url))
-            contextPrompt.append("\n\n")
-        }
-
+        // Append chat history
         contextPrompt.append("Please consider this information as context for your response. ")
         contextPrompt.append("If relevant, refer to or incorporate details from these notes, sources, uploaded documents, and websites in your answer.\n\n")
 
