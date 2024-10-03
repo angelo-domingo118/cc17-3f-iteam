@@ -51,7 +51,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.1")
 
     // Gemini AI
-    implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     implementation(libs.androidx.material3.android)
 
     // Testing

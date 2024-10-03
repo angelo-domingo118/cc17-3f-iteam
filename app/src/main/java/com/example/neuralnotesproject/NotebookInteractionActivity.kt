@@ -100,7 +100,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
         // Initialize Gemini API with Flash model
         generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash",
+            modelName = "gemini-1.5-flash-exp-0827",
             apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
             generationConfig = generationConfig {
                 temperature = 0.7f
