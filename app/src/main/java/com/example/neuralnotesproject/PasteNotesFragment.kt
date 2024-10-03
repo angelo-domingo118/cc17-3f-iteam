@@ -55,12 +55,15 @@ class PasteNotesFragment : DialogFragment() {
             val file = File(sourceDir, "$sourceId.txt")
             file.writeText("Pasted Text\n$text")
 
-            // Update SourcesFragment
+            // Generate a title from the pasted text
+            val title = extractTitle(text)
+
+            // Update SourcesFragment with the new source
             val sourcesFragment = parentFragmentManager.fragments.firstOrNull { it is SourcesFragment } as? SourcesFragment
             sourcesFragment?.addSource(
                 Source(
                     id = sourceId,
-                    name = "Pasted Text",
+                    name = title,
                     type = SourceType.TEXT,
                     content = text
                 )
@@ -70,6 +73,29 @@ class PasteNotesFragment : DialogFragment() {
         } ?: run {
             Log.e("PasteNotesFragment", "Notebook ID is null")
             Toast.makeText(context, "Error: Notebook ID not found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Extracts a title from the pasted text.
+     * Uses the first line or a substring of the first 30 characters.
+     *
+     * @param text The full pasted text.
+     * @param maxLength The maximum length of the title.
+     * @return A string to be used as the title.
+     */
+    private fun extractTitle(text: String, maxLength: Int = 30): String {
+        val firstLine = text.lineSequence().firstOrNull()?.trim() ?: ""
+        return if (firstLine.length > maxLength) {
+            firstLine.substring(0, maxLength) + "..."
+        } else if (firstLine.isNotEmpty()) {
+            firstLine
+        } else {
+            if (text.length > maxLength) {
+                text.substring(0, maxLength) + "..."
+            } else {
+                text
+            }
         }
     }
 }
