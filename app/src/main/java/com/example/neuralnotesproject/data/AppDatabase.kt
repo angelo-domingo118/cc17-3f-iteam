@@ -4,10 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.neuralnotesproject.dao.*
 
-@Database(entities = [User::class], version = 1, exportSchema = false)
+@Database(
+    entities = [User::class, Notebook::class, Note::class, Source::class],
+    version = 2, // Incremented version for schema change
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
+    abstract fun notebookDao(): NotebookDao
+    abstract fun noteDao(): NoteDao
+    abstract fun sourceDao(): SourceDao
 
     companion object {
         @Volatile
