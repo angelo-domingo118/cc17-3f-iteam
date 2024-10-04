@@ -48,4 +48,13 @@
     <string name="search_notebooks">Search notebooks…</string>
     <string name="rename_icon">Rename icon</string>
     <string name="delete_icon">Delete icon</string>
+    
+    <!-- New strings for login and sign-up -->
+    <string name="login">Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="confirm_password">Confirm Password</string>
 </resources>

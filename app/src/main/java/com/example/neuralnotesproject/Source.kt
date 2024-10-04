@@ -6,7 +6,6 @@ data class Source(
     val type: SourceType,
     val content: String // For FILE type, this should be the file content, not the URI
 )
-
 enum class SourceType {
     FILE, WEBSITE, TEXT
 }
