@@ -362,6 +362,11 @@ class MainActivity : AppCompatActivity() {
                 ((g * factor).toInt() shl 8) or
                 (b * factor).toInt()
     }
+
+    fun onProfileIconClick(view: View) {
+        val intent = Intent(this, SettingsActivity::class.java)
+        startActivity(intent)
+    }
 }
 
 data class Notebook(

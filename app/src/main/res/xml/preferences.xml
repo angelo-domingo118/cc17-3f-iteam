@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/account_settings"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="profile"
+            android:title="@string/profile"
+            android:summary="@string/view_and_edit_profile"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="logout"
+            android:title="@string/logout"
+            android:summary="@string/logout_summary"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="delete_account"
+            android:title="@string/delete_account"
+            android:summary="@string/delete_account_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/app_preferences"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            android:key="dark_mode"
+            android:title="@string/dark_mode"
+            android:summary="@string/theme_toggle_summary"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:key="enable_notifications"
+            android:title="@string/enable_notifications"
+            android:summary="@string/notifications_summary"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="backup_data"
+            android:title="@string/backup_data"
+            android:summary="@string/backup_data_summary"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

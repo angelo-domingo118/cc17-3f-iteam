@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/button_delete_account"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/delete_account"
+    android:textColor="#FFFFFF"
+    android:background="@drawable/gradient_button_background"
+    android:padding="8dp"/>

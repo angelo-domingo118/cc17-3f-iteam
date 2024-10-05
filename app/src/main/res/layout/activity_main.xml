@@ -26,6 +26,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:background="@drawable/gradient_circle_background"
+                android:onClick="onProfileIconClick"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent">
@@ -34,8 +35,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_user_profile"
-                    android:layout_gravity="center"
-                    app:tint="@color/dark_violet"/>
+                    android:layout_gravity="center"/>
             </FrameLayout>
 
             <TextView

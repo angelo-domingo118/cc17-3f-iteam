@@ -35,6 +35,24 @@
         <activity android:name=".NotebookInteractionActivity" android:exported="false" />
         <activity android:name=".EditNoteActivity" />
         <activity android:name=".WebsiteUrlInputActivity" />
+        
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/settings"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+        
+        <activity
+            android:name=".ProfileActivity"
+            android:label="@string/profile"
+            android:parentActivityName=".SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".SettingsActivity" />
+        </activity>
     </application>
 
 </manifest>
