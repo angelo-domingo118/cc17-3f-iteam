@@ -50,4 +50,23 @@
 
     </PreferenceCategory>
 
+    <!-- AI Model Selection -->
+    <ListPreference
+        android:key="ai_model"
+        android:title="Select AI Model"
+        android:summary="Choose the AI model you want to use"
+        android:entries="@array/ai_model_entries"
+        android:entryValues="@array/ai_model_values"
+        android:defaultValue="gemini"
+        app:iconSpaceReserved="false" />
+
+    <!-- Custom API Key Input -->
+    <EditTextPreference
+        android:key="custom_api_key"
+        android:title="Custom API Key"
+        android:summary="Enter your custom API key for AI services"
+        android:dialogTitle="API Key"
+        android:inputType="textPassword"
+        app:iconSpaceReserved="false" />
+
 </PreferenceScreen>

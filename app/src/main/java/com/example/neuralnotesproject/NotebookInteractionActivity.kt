@@ -42,6 +42,8 @@ import kotlinx.coroutines.withContext
 import java.net.URL
 import android.graphics.Paint
 import android.widget.ProgressBar
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -103,16 +105,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         // Initialize Gemini API with Flash model
-        generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash-exp-0827",
-            apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
-            generationConfig = generationConfig {
-                temperature = 0.7f
-                topK = 40
-                topP = 0.95f
-                maxOutputTokens = 1024
-            }
-        )
+        initializeGeminiApi()
 
         progressBar = findViewById(R.id.progressBar)
         progressBar.visibility = View.GONE
@@ -520,5 +513,50 @@ class NotebookInteractionActivity : AppCompatActivity() {
         // Clear fragment instances to reset state when activity is destroyed
         notesFragment = null
         sourcesFragment = null
+    }
+
+    private fun getApiKey(): String {
+        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val encryptedPrefs = EncryptedSharedPreferences.create(
+            "secure_prefs",
+            masterKeyAlias,
+            this,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+        return encryptedPrefs.getString("api_key", "") ?: ""
+    }
+
+    private fun initializeGeminiApi() {
+        val apiKey = getApiKey()
+        val selectedModel = getSelectedAiModel()
+        
+        generativeModel = GenerativeModel(
+            modelName = when (selectedModel) {
+                "gemini_1_0_pro" -> "gemini-1.0-pro"
+                "gemini_1_5_flash" -> "gemini-1.5-flash"
+                "gemini_1_5_pro" -> "gemini-1.5-pro"
+                else -> "gemini-1.5-flash" // Default model is now Gemini 1.5 Flash
+            },
+            apiKey = apiKey,
+            generationConfig = generationConfig {
+                temperature = 0.7f
+                topK = 40
+                topP = 0.95f
+                maxOutputTokens = 1024
+            }
+        )
+    }
+
+    private fun getSelectedAiModel(): String {
+        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val encryptedPrefs = EncryptedSharedPreferences.create(
+            "secure_prefs",
+            masterKeyAlias,
+            this,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+        return encryptedPrefs.getString("selected_ai_model", "gemini_1_5_flash") ?: "gemini_1_5_flash"
     }
 }

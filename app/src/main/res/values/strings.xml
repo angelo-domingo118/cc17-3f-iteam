@@ -79,4 +79,19 @@
     <string name="notifications_summary">Receive notifications for important updates</string>
     <string name="backup_data">Backup Data</string>
     <string name="backup_data_summary">Backup your notes and settings</string>
+    
+    <!-- AI Model Selection Arrays -->
+    <string-array name="ai_model_entries">
+        <item>Gemini 1.5 Flash (Default)</item>
+        <item>Gemini 1.0 Pro</item>
+        <item>Gemini 1.5 Pro</item>
+    </string-array>
+
+    <string-array name="ai_model_values">
+        <item>gemini_1_5_flash</item>
+        <item>gemini_1_0_pro</item>
+        <item>gemini_1_5_pro</item>
+    </string-array>
+
+    <string name="api_key_invalid">The API key entered is invalid. Please check and try again.</string>
 </resources>
