@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -72,4 +73,16 @@ dependencies {
 
     // Security Crypto
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-common:20.4.2")
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("com.google.firebase:firebase-common:20.4.2")
+    }
 }

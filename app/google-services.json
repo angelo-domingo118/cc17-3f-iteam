@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "426887084951",
+    "project_id": "neuro-notes",
+    "storage_bucket": "neuro-notes.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426887084951:android:1b833671f26994a54262d2",
+        "android_client_info": {
+          "package_name": "com.example.neuralnotesproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXPh8ZvwNt-2ZbQOEidrWytEE97gYwsb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

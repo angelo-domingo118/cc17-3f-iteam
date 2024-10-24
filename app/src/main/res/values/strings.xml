@@ -1,26 +1,45 @@
 <resources>
     <string name="app_name">Neuro Notes</string>
+    
+    <!-- General UI strings -->
     <string name="content_description_logo">App Logo</string>
     <string name="greeting_placeholder">Good morning, Angelo</string>
     <string name="greeting_message">Unlock your mind\'s potential with AI-powered note-taking and intelligent conversations.</string>
+    <string name="back">Back</string>
+    <string name="more_options">More Options</string>
+    <string name="next">Next</string>
+    <string name="save_note">Save</string>
+    <string name="title">Title</string>
+    <string name="select_all">Select All</string>
+    <string name="unselect_all">Unselect All</string>
+
+    <!-- Notebook related strings -->
     <string name="new_notebook">Create New Notebook</string>
     <string name="content_description_notebook_icon">Notebook Icon</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
+    <string name="search_notebooks">Search notebooks…</string>
+
+    <!-- Note taking strings -->
     <string name="type_to_make_your_notes">Type to make your notes</string>
     <string name="send">Send</string>
-    <string name="source">Source</string>
     <string name="notes">Notes</string>
+    <string name="add_note">Add Note</string>
+    <string name="note_title_hint">Placeholder</string>
+    <string name="note_content_hint">Placeholder</string>
+    <string name="type_message_hint">Ask me anything…</string>
+
+    <!-- Chat related strings -->
     <string name="chat">Chat</string>
-    <string name="back">Back</string>
-    <string name="more_options">More Options</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="like">Like</string>
     <string name="dislike">Dislike</string>
     <string name="pin_to_notes">Pin to notes</string>
+
+    <!-- Source related strings -->
+    <string name="source">Source</string>
     <string name="sources">Sources</string>
     <string name="add_source">Add Source</string>
-    <string name="add_note">Add Note</string>
     <string name="add_sources">Add Sources</string>
     <string name="add_from_files">Add from files</string>
     <string name="website_link">Website link</string>
@@ -28,43 +47,38 @@
     <string name="website_url">Website URL</string>
     <string name="paste_website_url_below">Paste the website link below.</string>
     <string name="enter_url_hint">https://en.wikipedia.org/wiki/Schussfahrt</string>
-    <string name="next">Next</string>
     <string name="paste_notes">Paste Notes</string>
     <string name="paste_notes_instruction">Paste or type your notes below:</string>
     <string name="paste_notes_hint">Enter your notes here</string>
     <string name="paste_texts_below">Paste the texts below.</string>
     <string name="process_notes">Process Notes</string>
     <string name="analyze_website">Analyze Website</string>
-    <string name="select_all">Select All</string>
-    <string name="unselect_all">Unselect All</string>
-    <string name="title">Title</string>
-    <string name="type_message_hint">Ask me anything…</string>
-    <string name="note_title_hint">Placeholder</string>
-    <string name="note_content_hint">Placeholder</string>
-    <string name="save_note">Save</string>
+
+    <!-- Content descriptions -->
     <string name="back_button">Back</string>
     <string name="content_description_chevron">Chevron icon</string>
     <string name="content_description_more_options">More options</string>
-    <string name="search_notebooks">Search notebooks…</string>
     <string name="rename_icon">Rename icon</string>
     <string name="delete_icon">Delete icon</string>
-    
-    <!-- New strings for login and sign-up -->
+    <string name="profile_picture">Profile Picture</string>
+    <string name="setting_icon">Setting Icon</string>
+    <string name="arrow_icon">Arrow Icon</string>
+
+    <!-- Authentication strings -->
     <string name="login">Login</string>
+    <string name="email">Email</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
-    <string name="sign_up">Sign Up</string>
-    <string name="dont_have_account">Don\'t have an account?</string>
-    <string name="already_have_account">Already have an account?</string>
     <string name="confirm_password">Confirm Password</string>
-    
-    <!-- New string resources -->
-    <string name="profile_picture">Profile Picture</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="signup">Sign Up</string>
+    <string name="dont_have_account">Don\'t have an account? Sign up</string>
+    <string name="already_have_account">Already have an account?</string>
+
+    <!-- Profile and Settings strings -->
     <string name="edit_profile">Edit Profile</string>
     <string name="settings">Settings</string>
-    <string name="setting_icon">Setting Icon</string>
     <string name="setting_title">Setting Title</string>
-    <string name="arrow_icon">Arrow Icon</string>
     <string name="delete_account">Delete Account</string>
     <string name="account_settings">Account Settings</string>
     <string name="view_and_edit_profile">View and Edit Profile</string>
@@ -79,7 +93,7 @@
     <string name="notifications_summary">Receive notifications for important updates</string>
     <string name="backup_data">Backup Data</string>
     <string name="backup_data_summary">Backup your notes and settings</string>
-    
+
     <!-- AI Model Selection Arrays -->
     <string-array name="ai_model_entries">
         <item>Gemini 1.5 Flash (Default)</item>

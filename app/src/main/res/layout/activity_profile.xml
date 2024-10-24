@@ -28,27 +28,27 @@
         android:id="@+id/tv_username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/username"
-        android:textSize="20sp"
-        android:textColor="@color/dark_violet"
-        android:textStyle="bold"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/iv_profile_picture"
+        android:text="@string/username"
+        android:textColor="@color/dark_violet"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/iv_profile_picture" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_edit_profile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/gradient_button_background"
         android:text="@string/edit_profile"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         app:backgroundTint="@null"
-        android:background="@drawable/gradient_button_background"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/tv_username"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/tv_username" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
