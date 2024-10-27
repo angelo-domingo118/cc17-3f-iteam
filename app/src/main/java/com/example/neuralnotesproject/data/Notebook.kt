@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "notebooks")
 data class Notebook(
     @PrimaryKey val id: String,
+    @ColumnInfo(index = true) val userId: String,
     var title: String,
-    val creationDate: String,
-    @ColumnInfo(index = true) val userOwnerId: Int // Foreign key to User
+    val creationDate: String
 )

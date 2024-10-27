@@ -9,13 +9,14 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.example.neuralnotesproject.firebase.FirebaseAuthManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.example.neuralnotesproject.data.AuthResult  // Add this import
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val firebaseAuth = FirebaseAuthManager()
     private val _registrationResult = MutableLiveData<Result<Boolean>>()
     val registrationResult: LiveData<Result<Boolean>> get() = _registrationResult
-    private val _loginResult = MutableLiveData<Result<String>>() // String represents userId
-    val loginResult: LiveData<Result<String>> get() = _loginResult
+    private val _loginResult = MutableLiveData<Result<AuthResult>>()
+    val loginResult: LiveData<Result<AuthResult>> get() = _loginResult
 
     fun register(email: String, password: String, confirmPassword: String) {
         if (email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
@@ -52,8 +53,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 firebaseAuth.signIn(email, password)
-                    .onSuccess {
-                        _loginResult.postValue(Result.success(it.uid))
+                    .onSuccess { firebaseUser ->
+                        val authResult = AuthResult(
+                            userId = firebaseUser.uid,
+                            email = firebaseUser.email ?: "",
+                            username = firebaseUser.displayName ?: email.substringBefore('@')
+                        )
+                        _loginResult.postValue(Result.success(authResult))
                     }
                     .onFailure {
                         _loginResult.postValue(Result.failure(it))

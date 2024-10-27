@@ -6,7 +6,7 @@ import com.example.neuralnotesproject.data.Notebook
 
 class NotebookRepository(private val notebookDao: NotebookDao) {
 
-    fun getNotebooksForUser(userId: Int): LiveData<List<Notebook>> {
+    fun getNotebooksForUser(userId: String): LiveData<List<Notebook>> {
         return notebookDao.getNotebooksForUser(userId)
     }
 

@@ -7,6 +7,9 @@ import com.example.neuralnotesproject.data.Notebook
 @Dao
 interface NotebookDao {
 
+    @Query("SELECT * FROM notebooks WHERE userId = :userId ORDER BY creationDate DESC")
+    fun getNotebooksForUser(userId: String): LiveData<List<Notebook>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotebook(notebook: Notebook)
 
@@ -15,7 +18,4 @@ interface NotebookDao {
 
     @Delete
     suspend fun deleteNotebook(notebook: Notebook)
-
-    @Query("SELECT * FROM notebooks WHERE userOwnerId = :userId ORDER BY creationDate DESC")
-    fun getNotebooksForUser(userId: Int): LiveData<List<Notebook>>
 }

@@ -41,12 +41,18 @@ import androidx.core.content.ContextCompat
 import androidx.cardview.widget.CardView
 import android.widget.FrameLayout
 import android.graphics.Rect
+import com.example.neuralnotesproject.data.AppDatabase
+import com.example.neuralnotesproject.repository.NotebookRepository
+import com.example.neuralnotesproject.viewmodels.NotebookViewModelFactory
+import com.example.neuralnotesproject.data.Notebook
+import com.example.neuralnotesproject.viewmodels.NotebookViewModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var notebookListContainer: RecyclerView
     private lateinit var notebookAdapter: NotebookAdapter
     private lateinit var notebookViewModel: NotebookViewModel
+    private var userId: String = ""
 
     private lateinit var etSearch: EditText
     private var allNotebooks: List<Notebook> = emptyList()
@@ -57,9 +63,11 @@ class MainActivity : AppCompatActivity() {
             when {
                 data?.hasExtra("DELETED_NOTEBOOK_ID") == true -> {
                     val deletedNotebookId = data.getStringExtra("DELETED_NOTEBOOK_ID")
-                    deletedNotebookId?.let {
-                        notebookViewModel.deleteNotebook(it)
-                        loadNotebooks() // Reload notebooks from storage
+                    deletedNotebookId?.let { id ->
+                        // Find the notebook with this ID and delete it
+                        notebookViewModel.notebooks.value?.find { it.id == id }?.let { notebook ->
+                            notebookViewModel.deleteNotebook(notebook)
+                        }
                     }
                 }
                 data?.hasExtra("RENAMED_NOTEBOOK_ID") == true -> {
@@ -67,7 +75,6 @@ class MainActivity : AppCompatActivity() {
                     val newTitle = data.getStringExtra("NEW_TITLE")
                     if (renamedNotebookId != null && newTitle != null) {
                         notebookViewModel.renameNotebook(renamedNotebookId, newTitle)
-                        loadNotebooks() // Reload notebooks from storage
                     }
                 }
             }
@@ -79,7 +86,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        notebookViewModel = ViewModelProvider(this)[NotebookViewModel::class.java]
+        // Get userId from intent
+        userId = intent.getStringExtra("USER_ID") ?: return
+
+        // Initialize database and repository
+        val database = AppDatabase.getDatabase(applicationContext)
+        val repository = NotebookRepository(database.notebookDao())
+
+        // Initialize ViewModel with factory
+        notebookViewModel = ViewModelProvider(
+            this,
+            NotebookViewModelFactory(repository, userId)
+        )[NotebookViewModel::class.java]
 
         setupRecyclerView()
         loadNotebooks()  // Load notebooks when the app starts
@@ -128,11 +146,11 @@ class MainActivity : AppCompatActivity() {
         
         val newNotebook = Notebook(
             id = UUID.randomUUID().toString(),
+            userId = userId,
             title = "Notebook ${notebookViewModel.notebooks.value?.size?.plus(1) ?: 1}",
             creationDate = formattedDate
         )
         notebookViewModel.addNotebook(newNotebook)
-        saveNotebook(newNotebook)  // Save the notebook to local storage
     }
 
     private fun saveNotebook(notebook: Notebook) {
@@ -161,30 +179,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadNotebooks() {
-        val notebooks = mutableListOf<Notebook>()
-        
-        filesDir.listFiles()?.forEach { folder ->
-            if (folder.isDirectory) {
-                val file = File(folder, "notebook_details.txt")
-                if (file.exists()) {
-                    try {
-                        val lines = file.readLines()
-                        if (lines.size >= 3) {
-                            val notebook = Notebook(
-                                id = lines[0],
-                                title = lines[1],
-                                creationDate = lines[2]
-                            )
-                            notebooks.add(notebook)
-                        }
-                    } catch (e: IOException) {
-                        Log.e("MainActivity", "Error loading notebook", e)
-                    }
-                }
-            }
+        // Remove the file-based loading since we're using Room database now
+        // The notebooks will be automatically loaded through the ViewModel's LiveData
+        notebookViewModel.notebooks.observe(this) { notebooks ->
+            notebookAdapter.updateNotebooks(notebooks)
         }
-        
-        notebookViewModel.setNotebooks(notebooks)
     }
 
     private fun showNotebookOptions(anchorView: View, position: Int) {
@@ -237,8 +236,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Delete Notebook")
             .setMessage("Are you sure you want to delete this notebook?")
             .setPositiveButton("Delete") { _, _ ->
-                // Delete from ViewModel
-                notebookViewModel.deleteNotebook(position)
+                notebookViewModel.deleteNotebook(notebook)
                 
                 // Delete from storage
                 val folder = File(filesDir, notebook.id)
@@ -253,8 +251,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showRenameDialog(position: Int) {
+        val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
         val input = EditText(this)
-        input.setText(notebookViewModel.notebooks.value?.get(position)?.title)
+        input.setText(notebook.title)
         
         AlertDialog.Builder(this)
             .setTitle("Rename Notebook")
@@ -262,34 +261,22 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Rename") { _, _ ->
                 val newTitle = input.text.toString()
                 if (newTitle.isNotEmpty()) {
-                    renameNotebook(position, newTitle)
+                    notebookViewModel.renameNotebook(notebook.id, newTitle)
+                    Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun renameNotebook(position: Int, newTitle: String) {
-        val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
-        val updatedNotebook = notebook.copy(title = newTitle)
-        notebookViewModel.renameNotebook(position, newTitle)
-        saveNotebook(updatedNotebook)  // Save the updated notebook to local storage
-        Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
-    }
-
     private fun onNotebookClick(position: Int) {
-        try {
-            val notebook = notebookViewModel.notebooks.value?.get(position)
-            notebook?.let {
-                val intent = Intent(this, NotebookInteractionActivity::class.java).apply {
-                    putExtra("NOTEBOOK_ID", it.id)
-                    putExtra("NOTEBOOK_TITLE", it.title)
-                }
-                notebookInteractionLauncher.launch(intent)
+        val notebook = notebookViewModel.notebooks.value?.get(position)
+        notebook?.let {
+            val intent = Intent(this, NotebookInteractionActivity::class.java).apply {
+                putExtra("NOTEBOOK_ID", it.id)
+                putExtra("NOTEBOOK_TITLE", it.title)
             }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Error starting NotebookInteractionActivity", e)
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            notebookInteractionLauncher.launch(intent)
         }
     }
 
@@ -367,14 +354,62 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, SettingsActivity::class.java)
         startActivity(intent)
     }
-}
 
-data class Notebook(
-    val id: String, 
-    var title: String, 
-    val creationDate: String,
-    val notes: Any = emptyList<String>() // Initialize with an empty list or any default value
-)
+    private fun onOptionsClick(view: View, position: Int) {
+        val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
+        
+        val popupView = LayoutInflater.from(this).inflate(R.layout.popup_menu, null)
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupView.findViewById<TextView>(R.id.menu_rename).setOnClickListener {
+            popupWindow.dismiss()
+            showRenameDialog(notebook)  // Pass the notebook object
+        }
+
+        popupView.findViewById<TextView>(R.id.menu_delete).setOnClickListener {
+            popupWindow.dismiss()
+            showDeleteDialog(notebook)
+        }
+
+        popupWindow.showAsDropDown(view)
+    }
+
+    private fun showRenameDialog(notebook: Notebook) {  // Changed to take Notebook parameter
+        val input = EditText(this)
+        input.setText(notebook.title)
+        
+        AlertDialog.Builder(this)
+            .setTitle("Rename Notebook")
+            .setView(input)
+            .setPositiveButton("Rename") { _, _ ->
+                val newTitle = input.text.toString()
+                if (newTitle.isNotEmpty()) {
+                    val updatedNotebook = notebook.copy(title = newTitle)
+                    notebookViewModel.updateNotebook(updatedNotebook)
+                    Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDeleteDialog(notebook: Notebook) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Notebook")
+            .setMessage("Are you sure you want to delete this notebook?")
+            .setPositiveButton("Delete") { _, _ ->
+                notebookViewModel.deleteNotebook(notebook)
+                Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+}
 
 class NotebookAdapter(
     private var notebooks: List<Notebook>,

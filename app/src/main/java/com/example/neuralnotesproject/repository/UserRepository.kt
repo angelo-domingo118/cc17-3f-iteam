@@ -1,17 +1,15 @@
 package com.example.neuralnotesproject.repository
 
-import com.example.neuralnotesproject.data.AppDatabase
+import androidx.lifecycle.LiveData
+import com.example.neuralnotesproject.dao.UserDao
 import com.example.neuralnotesproject.data.User
 
-class UserRepository(private val db: AppDatabase) {
-    private val userDao = db.userDao()
-
-    suspend fun registerUser(username: String, passwordHash: String): Long {
-        val user = User(username = username, passwordHash = passwordHash)
-        return userDao.insertUser(user)
-    }
-
-    suspend fun getUser(username: String): User? {
-        return userDao.getUserByUsername(username)
-    }
+class UserRepository(private val userDao: UserDao) {
+    suspend fun insertUser(user: User) = userDao.insertUser(user)
+    
+    suspend fun getUserById(userId: String): User? = userDao.getUserById(userId)
+    
+    suspend fun updateUser(user: User) = userDao.updateUser(user)
+    
+    suspend fun deleteUser(user: User) = userDao.deleteUser(user)
 }

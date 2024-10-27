@@ -9,7 +9,15 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.example.neuralnotesproject.viewmodels.AuthViewModel
+import com.example.neuralnotesproject.data.AppDatabase
+import com.example.neuralnotesproject.repository.NotebookRepository
+import com.example.neuralnotesproject.repository.NoteRepository
+import com.example.neuralnotesproject.repository.UserRepository
+import com.example.neuralnotesproject.util.DataMigrationUtil
+import kotlinx.coroutines.launch
+import com.example.neuralnotesproject.data.AuthResult  // Add this import
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var etUsername: EditText
@@ -31,7 +39,6 @@ class LoginActivity : AppCompatActivity() {
         btnLogin.setOnClickListener {
             val username = etUsername.text.toString().trim()
             val password = etPassword.text.toString()
-
             authViewModel.login(username, password)
         }
 
@@ -41,16 +48,34 @@ class LoginActivity : AppCompatActivity() {
         }
 
         authViewModel.loginResult.observe(this, Observer { result ->
-            result.onSuccess { userId ->
-                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("USER_ID", userId)
+            result.onSuccess { authResult ->
+                lifecycleScope.launch {
+                    // Initialize database and repositories
+                    val database = AppDatabase.getDatabase(applicationContext)
+                    val userRepository = UserRepository(database.userDao())
+                    val notebookRepository = NotebookRepository(database.notebookDao())
+                    val noteRepository = NoteRepository(database.noteDao())
+
+                    // Migrate existing data
+                    DataMigrationUtil.migrateData(
+                        context = applicationContext,
+                        userId = authResult.userId,
+                        userEmail = authResult.email,
+                        username = authResult.username,
+                        notebookRepository = notebookRepository,
+                        noteRepository = noteRepository,
+                        userRepository = userRepository
+                    )
+
+                    // Start MainActivity
+                    val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                        putExtra("USER_ID", authResult.userId)
+                    }
+                    startActivity(intent)
+                    finish()
                 }
-                startActivity(intent)
-                finish()
-            }
-            result.onFailure { exception ->
-                Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
+            }.onFailure { exception ->
+                Toast.makeText(this, "Login failed: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }

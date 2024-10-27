@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
+import com.example.neuralnotesproject.data.Notebook
 
 class NotebookViewModel : ViewModel() {
     private val _notebooks = MutableLiveData<List<Notebook>>()

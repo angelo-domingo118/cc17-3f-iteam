@@ -1,12 +1,11 @@
 package com.example.neuralnotesproject.data
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.ForeignKey
 
 @Entity(
-    tableName = "notes",
+    tableName = "chats",
     foreignKeys = [
         ForeignKey(
             entity = Notebook::class,
@@ -16,10 +15,12 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class Note(
-    @PrimaryKey val id: String,
-    val notebookId: String,
-    val title: String,
-    val content: String,
-    val creationDate: String
+data class Chat(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val notebookId: Long,
+    val userId: String,  // Firebase user ID
+    val message: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val isUserMessage: Boolean = true
 )
