@@ -44,6 +44,9 @@ import android.graphics.Paint
 import android.widget.ProgressBar
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import com.example.neuralnotesproject.data.Note
+import com.example.neuralnotesproject.data.Source
+import com.example.neuralnotesproject.data.SourceType
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -260,17 +263,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
             contextPrompt.append("Selected sources:\n")
             selectedSources.forEach { source ->
                 when (source.type) {
-                    SourceType.FILE -> {
-                        contextPrompt.append("File Name: ${source.name}\n")
-                        contextPrompt.append("Content:\n${source.content}\n\n")
+                    SourceType.PASTE_TEXT -> {
+                        // Handle paste text
                     }
                     SourceType.WEBSITE -> {
-                        contextPrompt.append("Website URL: ${source.name}\n")
-                        contextPrompt.append("Content:\n${fetchWebsiteContent(source.content)}\n\n")
+                        // Handle website
                     }
-                    SourceType.TEXT -> {
-                        contextPrompt.append("Text Source: ${source.name}\n")
-                        contextPrompt.append("Content:\n${source.content}\n\n")
+                    SourceType.FILE -> {
+                        // Handle file
                     }
                 }
             }
@@ -317,20 +317,15 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun saveMessageToNotes(content: String) {
-        val notesFolder = File(filesDir, "$notebookId/notes")
-        if (!notesFolder.exists()) {
-            notesFolder.mkdirs()
-        }
-
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "note_$timestamp.txt"
-        val noteFile = File(notesFolder, fileName)
-
         try {
-            noteFile.writeText("Untitled Note\n$content")
+            // Use the NotesFragment's addNote method instead of file operations
+            notesFragment?.addNote(
+                title = "Untitled Note",
+                content = content
+            )
             Toast.makeText(this, "Message saved to notes", Toast.LENGTH_SHORT).show()
-            notesFragment?.refreshNotes() // Add this line to refresh notes
-        } catch (e: IOException) {
+            // Remove refreshNotes() call since LiveData will handle updates
+        } catch (e: Exception) {
             Log.e("NotebookInteractionActivity", "Error saving message to notes", e)
             Toast.makeText(this, "Failed to save message", Toast.LENGTH_SHORT).show()
         }
@@ -449,11 +444,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private fun showSourcesFragment() {
         hideCurrentFragment()
         if (sourcesFragment == null) {
-            sourcesFragment = SourcesFragment().apply {
-                arguments = Bundle().apply {
-                    putString("notebookId", notebookId)
-                }
-            }
+            sourcesFragment = SourcesFragment.newInstance(notebookId)
             supportFragmentManager.beginTransaction()
                 .add(R.id.fragment_container, sourcesFragment!!)
                 .commit()
@@ -462,6 +453,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 .show(sourcesFragment!!)
                 .commit()
         }
+        supportFragmentManager.executePendingTransactions()
         currentFragment = sourcesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
@@ -480,8 +472,8 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 .show(notesFragment!!)
                 .commit()
         }
-        supportFragmentManager.executePendingTransactions() // Add this line
-        notesFragment?.refreshNotes()
+        supportFragmentManager.executePendingTransactions()
+        // Notes will be automatically updated through LiveData observation
         currentFragment = notesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE

@@ -18,6 +18,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.getSpans
+import com.example.neuralnotesproject.NotesFragment.Companion.EXTRA_NOTE_ID
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class EditNoteActivity : AppCompatActivity() {
@@ -227,9 +228,9 @@ class EditNoteActivity : AppCompatActivity() {
 
         if (title.isNotEmpty() && content.isNotEmpty()) {
             val resultIntent = Intent().apply {
-                putExtra(NotesFragment.EXTRA_NOTE_ID, noteId)
-                putExtra(NotesFragment.EXTRA_NOTE_TITLE, title)
-                putExtra(NotesFragment.EXTRA_NOTE_CONTENT, content)
+                putExtra(EXTRA_NOTE_ID, intent.getStringExtra(EXTRA_NOTE_ID))
+                putExtra(EXTRA_NOTE_TITLE, title)
+                putExtra(EXTRA_NOTE_CONTENT, content)
             }
             setResult(Activity.RESULT_OK, resultIntent)
             finish()

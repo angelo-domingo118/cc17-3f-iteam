@@ -12,6 +12,8 @@ import com.google.android.material.textfield.TextInputEditText
 import java.io.File
 import java.util.UUID
 import android.util.Log
+import com.example.neuralnotesproject.data.Source
+import com.example.neuralnotesproject.data.SourceType
 
 class PasteNotesFragment : DialogFragment() {
 
@@ -19,7 +21,6 @@ class PasteNotesFragment : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialogStyle)
         notebookId = arguments?.getString("notebookId")
     }
 
@@ -49,30 +50,20 @@ class PasteNotesFragment : DialogFragment() {
     private fun savePastedTextAsSource(text: String) {
         notebookId?.let { id ->
             val sourceId = UUID.randomUUID().toString()
-            val sourceDir = File(requireContext().filesDir, "$id/sources")
-            sourceDir.mkdirs()
-
-            val file = File(sourceDir, "$sourceId.txt")
-            file.writeText("Pasted Text\n$text")
-
-            // Generate a title from the pasted text
             val title = extractTitle(text)
-
-            // Update SourcesFragment with the new source
-            val sourcesFragment = parentFragmentManager.fragments.firstOrNull { it is SourcesFragment } as? SourcesFragment
-            sourcesFragment?.addSource(
-                Source(
-                    id = sourceId,
-                    name = title,
-                    type = SourceType.TEXT,
-                    content = text
-                )
+            
+            val source = Source(
+                id = sourceId,
+                name = title,
+                type = SourceType.PASTE_TEXT,
+                content = text,
+                notebookId = id
             )
-
-            Toast.makeText(context, "Text saved as source", Toast.LENGTH_SHORT).show()
-        } ?: run {
-            Log.e("PasteNotesFragment", "Notebook ID is null")
-            Toast.makeText(context, "Error: Notebook ID not found", Toast.LENGTH_SHORT).show()
+            
+            // Use ViewModel to add source
+            val sourcesFragment = parentFragmentManager.fragments
+                .firstOrNull { it is SourcesFragment } as? SourcesFragment
+            sourcesFragment?.addSource(source)
         }
     }
 

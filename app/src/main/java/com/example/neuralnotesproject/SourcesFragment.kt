@@ -16,13 +16,19 @@ import com.google.android.material.button.MaterialButton
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.GenerateContentResponse
-import com.example.neuralnotesproject.Source
-import com.example.neuralnotesproject.SourceType
+import com.example.neuralnotesproject.data.Source
+import com.example.neuralnotesproject.data.SourceType
 import java.io.File
 import java.util.UUID
 import android.provider.OpenableColumns
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.util.Log
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModel
+import com.example.neuralnotesproject.data.AppDatabase
+import com.example.neuralnotesproject.repository.SourceRepository
+import com.example.neuralnotesproject.viewmodels.SourceViewModel
+import com.example.neuralnotesproject.viewmodels.SourceViewModelFactory
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -35,11 +41,19 @@ class SourcesFragment : Fragment(), SourceActionListener {
     private var sources = mutableListOf<Source>()
     // Removed: private lateinit var geminiTextExtractor: GeminiTextExtractor
     private lateinit var notebookId: String
+    private lateinit var sourceViewModel: SourceViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Removed: geminiTextExtractor = GeminiTextExtractor(requireContext())
         notebookId = arguments?.getString("notebookId") ?: throw IllegalStateException("Notebook ID is required")
+
+        // Initialize ViewModel
+        val database = AppDatabase.getDatabase(requireContext())
+        val repository = SourceRepository(database.sourceDao())
+        sourceViewModel = ViewModelProvider(
+            this,
+            SourceViewModelFactory(repository, notebookId)
+        )[SourceViewModel::class.java]
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -49,12 +63,10 @@ class SourcesFragment : Fragment(), SourceActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Load sources from local storage
-        sources = loadSourcesFromStorage(notebookId).toMutableList()
-
+        // Set up RecyclerView
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_sources)
         sourceAdapter = SourceAdapter(
-            sources,
+            emptyList(),  // Start with empty list
             onSourceClick = { /* Handle source click */ },
             onSelectionChanged = { selectedSources ->
                 (activity as? NotebookInteractionActivity)?.onSelectedSourcesChanged(selectedSources)
@@ -63,11 +75,16 @@ class SourcesFragment : Fragment(), SourceActionListener {
         recyclerView.adapter = sourceAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
+        // Observe sources from ViewModel
+        sourceViewModel.sources.observe(viewLifecycleOwner) { sources ->
+            sourceAdapter.updateSources(sources)
+        }
+
+        // Set up buttons
         view.findViewById<MaterialButton>(R.id.btn_add_source).setOnClickListener {
             showAddSourceBottomSheet()
         }
 
-        // Set up bottom action bar buttons
         view.findViewById<MaterialButton>(R.id.btn_select_all).setOnClickListener {
             sourceAdapter.selectAll()
         }
@@ -90,38 +107,34 @@ class SourcesFragment : Fragment(), SourceActionListener {
         addSourceBottomSheet.show(childFragmentManager, AddSourceBottomSheetFragment.TAG)
     }
 
-    fun addSource(source: Source) {
-        sources.add(source)
-        sourceAdapter.updateSources(sources)
-        saveSourceToStorage(notebookId, source)
+    internal fun addSource(source: Source) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            sourceViewModel.addSource(source)
+        }
     }
 
     private fun deleteSelectedSources() {
         val selectedSources = sourceAdapter.getSelectedItems()
         if (selectedSources.isNotEmpty()) {
-            sources.removeAll(selectedSources)
-            sourceAdapter.updateSources(sources)
-            sourceAdapter.unselectAll()
-            deleteSourcesFromStorage(notebookId, selectedSources)
-            Toast.makeText(context, "${selectedSources.size} source(s) deleted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "No sources selected", Toast.LENGTH_SHORT).show()
+            viewLifecycleOwner.lifecycleScope.launch {
+                selectedSources.forEach { source ->
+                    sourceViewModel.deleteSource(source)
+                }
+                sourceAdapter.unselectAll()
+            }
         }
     }
 
     override fun onFileSelected(uri: Uri) {
-        val notebookId = arguments?.getString("notebookId") ?: return
-        val sourceDir = File(requireContext().filesDir, "$notebookId/sources")
-        sourceDir.mkdirs()
-
         val sourceId = UUID.randomUUID().toString()
-        val fileContent = getFileContent(uri) // Function to read file content from URI
+        val fileContent = getFileContent(uri)
 
         val source = Source(
             id = sourceId,
             name = getFileName(uri) ?: "Unnamed File",
             type = SourceType.FILE,
-            content = fileContent // Store actual content
+            content = fileContent,
+            notebookId = notebookId
         )
 
         addSource(source)
@@ -146,9 +159,14 @@ class SourcesFragment : Fragment(), SourceActionListener {
             id = sourceId,
             name = url,
             type = SourceType.WEBSITE,
-            content = url
+            content = url,
+            notebookId = notebookId
         )
-        addSource(source)
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            sourceViewModel.addSource(source)
+        }
+        
         (activity as? NotebookInteractionActivity)?.onWebsiteUrlSelected(url)
     }
 
@@ -166,7 +184,8 @@ class SourcesFragment : Fragment(), SourceActionListener {
             id = UUID.randomUUID().toString(),
             name = title,
             type = type,
-            content = content
+            content = content,
+            notebookId = notebookId
         )
         addSource(newSource)
     }
@@ -178,28 +197,6 @@ class SourcesFragment : Fragment(), SourceActionListener {
 
     fun getSelectedSourcesContent(): String {
         return sourceAdapter.getSelectedItems().joinToString("\n\n") { "${it.name}\n${it.content}" }
-    }
-
-    private fun loadSourcesFromStorage(notebookId: String): List<Source> {
-        val sourceDir = File(requireContext().filesDir, "$notebookId/sources")
-        val sources = mutableListOf<Source>()
-
-        if (sourceDir.exists() && sourceDir.isDirectory) {
-            sourceDir.listFiles()?.forEach { file ->
-                if (file.isFile && file.extension == "txt") {
-                    val lines = file.readLines()
-                    if (lines.size >= 3) { // Assuming format: name, type, content
-                        val id = file.nameWithoutExtension
-                        val name = lines[0]
-                        val type = SourceType.valueOf(lines[1])
-                        val content = lines.subList(2, lines.size).joinToString("\n")
-                        sources.add(Source(id, name, type, content))
-                    }
-                }
-            }
-        }
-
-        return sources
     }
 
     private fun saveSourceToStorage(notebookId: String, source: Source) {
@@ -225,5 +222,15 @@ class SourcesFragment : Fragment(), SourceActionListener {
             }
         }
         pasteNotesFragment.show(parentFragmentManager, "PasteNotesFragment")
+    }
+
+    companion object {
+        fun newInstance(notebookId: String): SourcesFragment {
+            return SourcesFragment().apply {
+                arguments = Bundle().apply {
+                    putString("notebookId", notebookId)
+                }
+            }
+        }
     }
 }

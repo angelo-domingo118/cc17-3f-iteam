@@ -3,6 +3,7 @@ package com.example.neuralnotesproject.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "chats",
@@ -13,7 +14,8 @@ import androidx.room.ForeignKey
             childColumns = ["notebookId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["notebookId"])]
 )
 data class Chat(
     @PrimaryKey(autoGenerate = true)

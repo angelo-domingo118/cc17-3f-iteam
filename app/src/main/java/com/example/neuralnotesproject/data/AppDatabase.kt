@@ -14,7 +14,13 @@ import com.example.neuralnotesproject.data.Source
 import com.example.neuralnotesproject.data.User
 
 @Database(
-    entities = [User::class, Notebook::class, Note::class, Source::class, Chat::class],
+    entities = [
+        User::class,
+        Notebook::class,
+        Note::class,
+        Source::class,  // Remove the full package path
+        Chat::class
+    ],
     version = 2,
     exportSchema = false
 )

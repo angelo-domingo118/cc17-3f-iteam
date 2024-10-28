@@ -14,12 +14,21 @@ import java.util.UUID
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.content.Context
+import androidx.lifecycle.ViewModelProvider
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import com.example.neuralnotesproject.data.Note
+import com.example.neuralnotesproject.data.AppDatabase
+import com.example.neuralnotesproject.repository.NoteRepository
+import com.example.neuralnotesproject.viewmodels.NoteViewModel
+import com.example.neuralnotesproject.viewmodels.NoteViewModelFactory
 
 class NotesFragment : Fragment() {
 
     private lateinit var noteAdapter: NoteAdapter
-    private var notes = mutableListOf<Note>()
-    private lateinit var notebookId: String
+    private lateinit var noteViewModel: NoteViewModel
+    private var notebookId: String = ""
 
     private val editNoteActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -45,6 +54,14 @@ class NotesFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         notebookId = arguments?.getString(ARG_NOTEBOOK_ID) ?: throw IllegalArgumentException("Notebook ID is required")
+        
+        // Initialize ViewModel
+        val database = AppDatabase.getDatabase(requireContext())
+        val repository = NoteRepository(database.noteDao())
+        noteViewModel = ViewModelProvider(
+            this,
+            NoteViewModelFactory(repository, notebookId)
+        )[NoteViewModel::class.java]
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -54,18 +71,31 @@ class NotesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Load notes from local storage
-        notes = FileUtils.loadNotes(requireContext(), notebookId).toMutableList()
+        setupRecyclerView(view)
+        setupButtons(view)
+        observeNotes()
+    }
 
+    private fun setupRecyclerView(view: View) {
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_notes)
         noteAdapter = NoteAdapter(
-            notes,
-            { note -> launchEditNoteActivity(note) },
-            { selectedNotes -> onSelectedNotesChanged(selectedNotes) }
+            notes = emptyList(),  // Specify parameter name
+            onNoteClick = { note -> launchEditNoteActivity(note) },  // Specify parameter name
+            onSelectionChanged = { selectedNotes -> onSelectedNotesChanged(selectedNotes) }  // Specify parameter name
         )
-        recyclerView.adapter = noteAdapter
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.apply {
+            adapter = noteAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
+    }
 
+    private fun observeNotes() {
+        noteViewModel.notes.observe(viewLifecycleOwner) { notes ->
+            noteAdapter.updateNotes(notes)
+        }
+    }
+
+    private fun setupButtons(view: View) {
         view.findViewById<MaterialButton>(R.id.btn_add_note).setOnClickListener {
             launchEditNoteActivity()
         }
@@ -105,45 +135,37 @@ class NotesFragment : Fragment() {
     }
 
     fun addNote(title: String, content: String) {
-        val newNote = Note(UUID.randomUUID().toString(), title, content)
-        notes.add(newNote)
-        FileUtils.saveNote(requireContext(), notebookId, newNote)
-        noteAdapter.updateNotes(notes)
+        val note = Note(
+            id = UUID.randomUUID().toString(),
+            notebookId = notebookId,
+            title = title,
+            content = content,
+            creationDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                .format(Date())
+        )
+        noteViewModel.addNote(note)
     }
 
     private fun updateNote(id: String, title: String, content: String) {
-        val noteIndex = notes.indexOfFirst { it.id == id }
-        if (noteIndex != -1) {
-            val updatedNote = Note(id, title, content)
-            notes[noteIndex] = updatedNote
-            FileUtils.saveNote(requireContext(), notebookId, updatedNote)
-            noteAdapter.updateNotes(notes)
-        }
+        val currentNote = noteViewModel.notes.value?.find { it.id == id } ?: return
+        val updatedNote = currentNote.copy(
+            title = title,
+            content = content
+        )
+        noteViewModel.updateNote(updatedNote)
     }
 
     private fun deleteSelectedNotes() {
         val selectedNotes = noteAdapter.getSelectedItems()
         if (selectedNotes.isNotEmpty()) {
-            notes.removeAll(selectedNotes)
             selectedNotes.forEach { note ->
-                FileUtils.deleteNote(requireContext(), notebookId, note.id)
+                noteViewModel.deleteNote(note)
             }
-            noteAdapter.updateNotes(notes)
             noteAdapter.unselectAll()
             Toast.makeText(context, "${selectedNotes.size} note(s) deleted", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "No notes selected", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    fun refreshNotes() {
-        notes = FileUtils.loadNotes(requireContext(), notebookId).toMutableList()
-        noteAdapter.updateNotes(notes)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        refreshNotes()
     }
 
     companion object {
