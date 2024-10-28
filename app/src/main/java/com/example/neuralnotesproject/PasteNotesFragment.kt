@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import java.io.File
@@ -15,7 +15,7 @@ import android.util.Log
 import com.example.neuralnotesproject.data.Source
 import com.example.neuralnotesproject.data.SourceType
 
-class PasteNotesFragment : DialogFragment() {
+class PasteNotesFragment : Fragment() {
 
     private var notebookId: String? = null
 
@@ -32,15 +32,14 @@ class PasteNotesFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
-            dismiss()
-            AddSourceBottomSheetFragment().show(parentFragmentManager, AddSourceBottomSheetFragment.TAG)
+            parentFragmentManager.popBackStack()
         }
 
         view.findViewById<MaterialButton>(R.id.btn_insert).setOnClickListener {
             val pastedText = view.findViewById<TextInputEditText>(R.id.et_notes_input).text.toString()
             if (pastedText.isNotEmpty()) {
                 savePastedTextAsSource(pastedText)
-                dismiss()
+                parentFragmentManager.popBackStack()  // Changed from dismiss() to popBackStack()
             } else {
                 Toast.makeText(context, "Please paste some text", Toast.LENGTH_SHORT).show()
             }

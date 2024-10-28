@@ -1,5 +1,7 @@
 package com.example.neuralnotesproject
 
+import android.app.Activity  // Add this import
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -23,6 +25,7 @@ import java.util.UUID
 import android.provider.OpenableColumns
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModel
 import com.example.neuralnotesproject.data.AppDatabase
@@ -42,6 +45,27 @@ class SourcesFragment : Fragment(), SourceActionListener {
     // Removed: private lateinit var geminiTextExtractor: GeminiTextExtractor
     private lateinit var notebookId: String
     private lateinit var sourceViewModel: SourceViewModel
+
+    private val pasteNotesLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val pastedText = result.data?.getStringExtra(PasteNotesActivity.EXTRA_PASTED_TEXT)
+            pastedText?.let { text ->
+                val sourceId = UUID.randomUUID().toString()
+                val title = extractTitle(text)
+                
+                val source = Source(
+                    id = sourceId,
+                    name = title,
+                    type = SourceType.PASTE_TEXT,
+                    content = text,
+                    notebookId = notebookId
+                )
+                addSource(source)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -216,12 +240,23 @@ class SourcesFragment : Fragment(), SourceActionListener {
     }
 
     fun showPasteNotes() {
-        val pasteNotesFragment = PasteNotesFragment().apply {
-            arguments = Bundle().apply {
-                putString("notebookId", this@SourcesFragment.notebookId)
+        val intent = Intent(requireContext(), PasteNotesActivity::class.java)
+        pasteNotesLauncher.launch(intent)
+    }
+
+    private fun extractTitle(text: String, maxLength: Int = 30): String {
+        val firstLine = text.lineSequence().firstOrNull()?.trim() ?: ""
+        return if (firstLine.length > maxLength) {
+            firstLine.substring(0, maxLength) + "..."
+        } else if (firstLine.isNotEmpty()) {
+            firstLine
+        } else {
+            if (text.length > maxLength) {
+                text.substring(0, maxLength) + "..."
+            } else {
+                text
             }
         }
-        pasteNotesFragment.show(parentFragmentManager, "PasteNotesFragment")
     }
 
     companion object {

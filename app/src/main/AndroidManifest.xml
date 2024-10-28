@@ -58,6 +58,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".SettingsActivity" />
         </activity>
+        
+        <activity
+            android:name=".PasteNotesActivity"
+            android:theme="@style/Theme.NeuralNotesProject"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
