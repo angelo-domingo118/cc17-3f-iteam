@@ -47,6 +47,8 @@ import androidx.security.crypto.MasterKeys
 import com.example.neuralnotesproject.data.Note
 import com.example.neuralnotesproject.data.Source
 import com.example.neuralnotesproject.data.SourceType
+import com.example.neuralnotesproject.util.FileStorageManager
+import java.util.UUID
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -198,6 +200,49 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     fun onWebsiteUrlSelected(url: String) {
         selectedWebsiteUrl = url
+        lifecycleScope.launch {
+            try {
+                val content = withContext(Dispatchers.IO) {
+                    URL(url).readText()
+                }
+                // Create a source with the fetched content
+                val source = Source(
+                    id = UUID.randomUUID().toString(),
+                    name = url,
+                    type = SourceType.WEBSITE,
+                    content = content,
+                    filePath = null, // Add null filePath for WEBSITE type
+                    notebookId = notebookId
+                )
+                // Add to selected sources
+                selectedSources = selectedSources + source
+                selectedSourcesContent = buildSelectedSourcesContent()
+            } catch (e: Exception) {
+                Log.e("NotebookInteraction", "Error fetching website content", e)
+                Toast.makeText(this@NotebookInteractionActivity, 
+                    "Failed to load website content", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun buildSelectedSourcesContent(): String {
+        return selectedSources.joinToString("\n\n") { source ->
+            when (source.type) {
+                SourceType.PASTE_TEXT -> "${source.name}\n${source.content}"
+                SourceType.WEBSITE -> "Website: ${source.name}\n${source.content}"
+                SourceType.FILE -> {
+                    try {
+                        val fileContent = source.filePath?.let { path ->
+                            File(path).readText()
+                        } ?: "Unable to read file content"
+                        "File: ${source.name}\n$fileContent"
+                    } catch (e: Exception) {
+                        Log.e("NotebookInteraction", "Error reading file: ${e.message}")
+                        "Error reading file ${source.name}: ${e.message}"
+                    }
+                }
+            }
+        }
     }
 
     private fun sendMessage() {
@@ -251,40 +296,52 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private suspend fun buildPromptWithContext(userMessage: String): String {
-        val contextPrompt = StringBuilder()
-
-        // Append selected notes
-        if (selectedNotesContent.isNotEmpty()) {
-            contextPrompt.append("Selected notes:\n$selectedNotesContent\n\n")
-        }
+        val sourcesFragment = supportFragmentManager.fragments
+            .firstOrNull { it is SourcesFragment } as? SourcesFragment
+            
+        val selectedSources = sourcesFragment?.getSelectedItems() ?: emptyList()  // Use the new public method
         
-        // Append selected sources
-        if (selectedSources.isNotEmpty()) {
-            contextPrompt.append("Selected sources:\n")
-            selectedSources.forEach { source ->
-                when (source.type) {
-                    SourceType.PASTE_TEXT -> {
-                        // Handle paste text
+        val contextBuilder = StringBuilder()
+        
+        // Add selected sources content
+        selectedSources.forEach { source ->
+            when (source.type) {
+                SourceType.FILE -> {
+                    try {
+                        val fileContent = source.filePath?.let { path ->
+                            File(path).readText()
+                        } ?: source.content
+                        contextBuilder.append("Content from file '${source.name}':\n")
+                        contextBuilder.append(fileContent)
+                        contextBuilder.append("\n\n")
+                    } catch (e: Exception) {
+                        Log.e("NotebookInteraction", "Error reading file: ${e.message}")
                     }
-                    SourceType.WEBSITE -> {
-                        // Handle website
-                    }
-                    SourceType.FILE -> {
-                        // Handle file
-                    }
+                }
+                SourceType.WEBSITE -> {
+                    contextBuilder.append("Content from website '${source.name}':\n")
+                    contextBuilder.append(source.content)
+                    contextBuilder.append("\n\n")
+                }
+                SourceType.PASTE_TEXT -> {
+                    contextBuilder.append("Content from text '${source.name}':\n")
+                    contextBuilder.append(source.content)
+                    contextBuilder.append("\n\n")
                 }
             }
         }
 
-        // Append chat history
-        contextPrompt.append("Please consider this information as context for your response. ")
-        contextPrompt.append("If relevant, refer to or incorporate details from these notes, sources, uploaded documents, and websites in your answer.\n\n")
-
-        val chatHistory = chatContext.takeLast(10).joinToString("\n") { 
-            if (it.isUser) "User: ${it.content}" else "AI: ${it.content}"
+        return if (contextBuilder.isNotEmpty()) {
+            """
+            Context:
+            ${contextBuilder}
+            
+            Based on the above context, please respond to this message:
+            $userMessage
+            """.trimIndent()
+        } else {
+            userMessage
         }
-
-        return "${contextPrompt}Chat history:\n$chatHistory\n\nUser: $userMessage\n\nAI:"
     }
 
     private suspend fun fetchWebsiteContent(url: String): String {

@@ -22,6 +22,7 @@ data class Source(
     val name: String,
     val type: SourceType,
     val content: String,
+    val filePath: String?, // Add this for FILE type sources
     val notebookId: String
 )
 

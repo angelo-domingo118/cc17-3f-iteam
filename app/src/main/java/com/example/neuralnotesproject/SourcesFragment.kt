@@ -32,6 +32,7 @@ import com.example.neuralnotesproject.data.AppDatabase
 import com.example.neuralnotesproject.repository.SourceRepository
 import com.example.neuralnotesproject.viewmodels.SourceViewModel
 import com.example.neuralnotesproject.viewmodels.SourceViewModelFactory
+import com.example.neuralnotesproject.util.FileStorageManager
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -60,6 +61,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
                     name = title,
                     type = SourceType.PASTE_TEXT,
                     content = text,
+                    filePath = null, // Add null filePath for PASTE_TEXT
                     notebookId = notebookId
                 )
                 addSource(source)
@@ -151,13 +153,23 @@ class SourcesFragment : Fragment(), SourceActionListener {
 
     override fun onFileSelected(uri: Uri) {
         val sourceId = UUID.randomUUID().toString()
-        val fileContent = getFileContent(uri)
+        val fileManager = FileStorageManager(requireContext())
+        val filePath = fileManager.saveFile(uri, notebookId)
+        
+        // Read the actual file content
+        val fileContent = try {
+            File(filePath).readText()
+        } catch (e: Exception) {
+            Log.e("SourcesFragment", "Error reading file content", e)
+            "Error reading file content: ${e.message}"
+        }
 
         val source = Source(
             id = sourceId,
             name = getFileName(uri) ?: "Unnamed File",
             type = SourceType.FILE,
-            content = fileContent,
+            content = fileContent,  // Store the actual content
+            filePath = filePath,
             notebookId = notebookId
         )
 
@@ -184,6 +196,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
             name = url,
             type = SourceType.WEBSITE,
             content = url,
+            filePath = null,  // Add null filePath for WEBSITE type
             notebookId = notebookId
         )
         
@@ -209,6 +222,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
             name = title,
             type = type,
             content = content,
+            filePath = null,  // Add null filePath
             notebookId = notebookId
         )
         addSource(newSource)
@@ -259,6 +273,30 @@ class SourcesFragment : Fragment(), SourceActionListener {
         }
     }
 
+    private fun addWebsiteSource(url: String, content: String) {
+        val source = Source(
+            id = UUID.randomUUID().toString(),
+            name = url,
+            type = SourceType.WEBSITE,
+            content = content,
+            filePath = null,  // No file path for WEBSITE type
+            notebookId = notebookId
+        )
+        sourceViewModel.addSource(source)
+    }
+
+    private fun addPastedTextSource(text: String) {
+        val source = Source(
+            id = UUID.randomUUID().toString(),
+            name = "Pasted Text",
+            type = SourceType.PASTE_TEXT,
+            content = text,
+            filePath = null,  // No file path for PASTE_TEXT type
+            notebookId = notebookId
+        )
+        sourceViewModel.addSource(source)
+    }
+
     companion object {
         fun newInstance(notebookId: String): SourcesFragment {
             return SourcesFragment().apply {
@@ -267,5 +305,10 @@ class SourcesFragment : Fragment(), SourceActionListener {
                 }
             }
         }
+    }
+
+    // Add this public method to access selected items
+    fun getSelectedItems(): List<Source> {
+        return sourceAdapter.getSelectedItems()
     }
 }

@@ -18,10 +18,10 @@ import com.example.neuralnotesproject.data.User
         User::class,
         Notebook::class,
         Note::class,
-        Source::class,  // Remove the full package path
+        Source::class,
         Chat::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -40,13 +40,22 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "neural_notes_database"
+                    "app_database"
                 )
-                .addMigrations(MIGRATION_1_2)
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_2_3)
                 .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        // Define migration from version 2 to 3
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add filePath column to sources table
+                db.execSQL(
+                    "ALTER TABLE sources ADD COLUMN filePath TEXT"
+                )
             }
         }
     }

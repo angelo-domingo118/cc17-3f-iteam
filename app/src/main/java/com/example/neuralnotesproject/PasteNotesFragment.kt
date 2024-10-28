@@ -56,10 +56,10 @@ class PasteNotesFragment : Fragment() {
                 name = title,
                 type = SourceType.PASTE_TEXT,
                 content = text,
+                filePath = null,  // No file path for PASTE_TEXT type
                 notebookId = id
             )
             
-            // Use ViewModel to add source
             val sourcesFragment = parentFragmentManager.fragments
                 .firstOrNull { it is SourcesFragment } as? SourcesFragment
             sourcesFragment?.addSource(source)
