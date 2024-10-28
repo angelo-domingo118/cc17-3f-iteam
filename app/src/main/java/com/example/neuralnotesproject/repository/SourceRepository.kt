@@ -10,6 +10,10 @@ class SourceRepository(private val sourceDao: SourceDao) {
         return sourceDao.getSourcesForNotebook(notebookId)
     }
 
+    suspend fun getSourcesForUser(userId: String): List<Source> {
+        return sourceDao.getSourcesForUser(userId)
+    }
+
     suspend fun insertSource(source: Source) {
         sourceDao.insertSource(source)
     }

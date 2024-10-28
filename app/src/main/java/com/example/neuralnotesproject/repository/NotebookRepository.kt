@@ -3,6 +3,8 @@ package com.example.neuralnotesproject.repository
 import androidx.lifecycle.LiveData
 import com.example.neuralnotesproject.dao.NotebookDao
 import com.example.neuralnotesproject.data.Notebook
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class NotebookRepository(private val notebookDao: NotebookDao) {
 
@@ -20,5 +22,9 @@ class NotebookRepository(private val notebookDao: NotebookDao) {
 
     suspend fun deleteNotebook(notebook: Notebook) {
         notebookDao.deleteNotebook(notebook)
+    }
+
+    suspend fun getNotebooksForUserSync(userId: String): List<Notebook> = withContext(Dispatchers.IO) {
+        notebookDao.getNotebooksForUserSync(userId)
     }
 }

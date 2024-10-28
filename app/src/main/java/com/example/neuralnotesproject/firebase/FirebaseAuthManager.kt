@@ -25,6 +25,15 @@ class FirebaseAuthManager {
         }
     }
 
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            auth.currentUser?.delete()?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun signOut() {
         auth.signOut()
     }

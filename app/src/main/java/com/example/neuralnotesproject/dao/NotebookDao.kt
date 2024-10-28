@@ -18,4 +18,7 @@ interface NotebookDao {
 
     @Delete
     suspend fun deleteNotebook(notebook: Notebook)
+
+    @Query("SELECT * FROM notebooks WHERE userId = :userId")
+    fun getNotebooksForUserSync(userId: String): List<Notebook>
 }
