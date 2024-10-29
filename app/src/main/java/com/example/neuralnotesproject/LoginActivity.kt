@@ -19,6 +19,7 @@ import com.example.neuralnotesproject.repository.UserRepository
 import com.example.neuralnotesproject.util.DataMigrationUtil
 import kotlinx.coroutines.launch
 import com.example.neuralnotesproject.data.AuthResult  // Add this import
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var etUsername: EditText
@@ -31,6 +32,20 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Check if user is already signed in
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            // User is already signed in, proceed to MainActivity
+            val authResult = AuthResult(
+                userId = currentUser.uid,
+                email = currentUser.email ?: "",
+                username = currentUser.displayName ?: currentUser.email?.substringBefore('@') ?: ""
+            )
+            navigateToMain(authResult)
+            return
+        }
+
         setContentView(R.layout.login_activity)
 
         etUsername = findViewById(R.id.et_username)
@@ -51,34 +66,39 @@ class LoginActivity : AppCompatActivity() {
 
         authViewModel.loginResult.observe(this, Observer { result ->
             result.onSuccess { authResult ->
-                lifecycleScope.launch {
-                    // Initialize database and repositories
-                    val database = AppDatabase.getDatabase(applicationContext)
-                    val userRepository = UserRepository(database.userDao())
-                    val notebookRepository = NotebookRepository(database.notebookDao())
-                    val noteRepository = NoteRepository(database.noteDao())
-
-                    // Migrate existing data
-                    DataMigrationUtil.migrateData(
-                        context = applicationContext,
-                        userId = authResult.userId,
-                        userEmail = authResult.email,
-                        username = authResult.username,
-                        notebookRepository = notebookRepository,
-                        noteRepository = noteRepository,
-                        userRepository = userRepository
-                    )
-
-                    // Start MainActivity
-                    val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
-                        putExtra("USER_ID", authResult.userId)
-                    }
-                    startActivity(intent)
-                    finish()
-                }
+                navigateToMain(authResult)
             }.onFailure { exception ->
                 Toast.makeText(this, "Login failed: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun navigateToMain(authResult: AuthResult) {
+        lifecycleScope.launch {
+            // Initialize database and repositories
+            val database = AppDatabase.getDatabase(applicationContext)
+            val userRepository = UserRepository(database.userDao())
+            val notebookRepository = NotebookRepository(database.notebookDao())
+            val noteRepository = NoteRepository(database.noteDao())
+
+            // Migrate existing data
+            DataMigrationUtil.migrateData(
+                context = applicationContext,
+                userId = authResult.userId,
+                userEmail = authResult.email,
+                username = authResult.username,
+                notebookRepository = notebookRepository,
+                noteRepository = noteRepository,
+                userRepository = userRepository
+            )
+
+            // Start MainActivity
+            val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                putExtra("USER_ID", authResult.userId)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+        }
     }
 }

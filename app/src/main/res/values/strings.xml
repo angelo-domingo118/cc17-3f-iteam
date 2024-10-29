@@ -94,19 +94,6 @@
     <string name="backup_data">Backup Data</string>
     <string name="backup_data_summary">Backup your notes and settings</string>
 
-    <!-- AI Model Selection Arrays -->
-    <string-array name="ai_model_entries">
-        <item>Gemini 1.5 Flash (Default)</item>
-        <item>Gemini 1.0 Pro</item>
-        <item>Gemini 1.5 Pro</item>
-    </string-array>
-
-    <string-array name="ai_model_values">
-        <item>gemini_1_5_flash</item>
-        <item>gemini_1_0_pro</item>
-        <item>gemini_1_5_pro</item>
-    </string-array>
-
     <string name="api_key_invalid">The API key entered is invalid. Please check and try again.</string>
 
     <string name="app_title">NeuroNotes</string>
@@ -132,4 +119,15 @@
     <!-- Add these string resources -->
     <string name="greeting">Welcome back!</string>
     <string name="greeting_subtitle">Your digital notebooks are ready for your thoughts and ideas.</string>
+
+    <!-- Settings strings -->
+    <string name="change_email">Change Email</string>
+    <string name="change_password">Change Password</string>
+    <string name="password_last_changed">Last changed: 30 days ago</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="new_email">New Email Address</string>
+
+    <string name="account_actions">Account Actions</string>
 </resources>

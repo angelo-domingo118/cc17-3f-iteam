@@ -59,4 +59,9 @@
     <color name="button_gradient_start">#BB86FC</color>
     <color name="button_gradient_end">#7C4DFF</color>
     <color name="input_background">#1E1E1E</color>
+
+    <color name="background">#121212</color>
+    <color name="surface">#272727</color>
+    <color name="primary_purple">#7C4DFF</color>
+    <color name="error_red">#FF5252</color>
 </resources>
