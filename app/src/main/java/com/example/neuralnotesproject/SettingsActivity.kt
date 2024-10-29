@@ -2,14 +2,11 @@ package com.example.neuralnotesproject
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
-import androidx.preference.ListPreference
-import androidx.preference.EditTextPreference
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -18,170 +15,172 @@ import com.example.neuralnotesproject.firebase.FirebaseAuthManager
 import com.example.neuralnotesproject.repository.UserRepository
 import kotlinx.coroutines.launch
 import com.example.neuralnotesproject.util.AccountCleanupUtil
+import android.widget.ImageView
+import android.widget.Spinner
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.button.MaterialButton
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.settings_preferences_container, SettingsFragment())
-            .commit()
-    }
+        // Set up back button click listener
+        findViewById<ImageView>(R.id.btn_back).setOnClickListener {
+            onBackPressed()
+        }
 
-    class SettingsFragment : PreferenceFragmentCompat() {
-        private lateinit var encryptedPrefs: SharedPreferences
-        private lateinit var firebaseAuthManager: FirebaseAuthManager
-        private lateinit var userRepository: UserRepository
-        private lateinit var accountCleanupUtil: AccountCleanupUtil
+        // Set up spinner
+        val spinner = findViewById<Spinner>(R.id.spinner_ai_model)
+        val adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.ai_model_entries,
+            android.R.layout.simple_spinner_item
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        spinner.adapter = adapter
 
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.preferences, rootKey)
+        // Initialize preferences
+        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val encryptedPrefs = EncryptedSharedPreferences.create(
+            "secure_prefs",
+            masterKeyAlias,
+            this,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
 
-            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-            encryptedPrefs = EncryptedSharedPreferences.create(
-                "secure_prefs",
-                masterKeyAlias,
-                requireContext(),
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
+        // Set up API key input
+        val apiKeyInput = findViewById<TextInputEditText>(R.id.et_api_key)
+        apiKeyInput.setText(encryptedPrefs.getString("api_key", ""))
+        
+        // Set up spinner selection
+        val savedModel = encryptedPrefs.getString("selected_ai_model", "gemini_1_0_pro")
+        val modelPosition = adapter.getPosition(savedModel)
+        if (modelPosition != -1) {
+            spinner.setSelection(modelPosition)
+        }
 
-            firebaseAuthManager = FirebaseAuthManager()
-            val database = AppDatabase.getDatabase(requireContext())
-            userRepository = UserRepository(database.userDao())
-
-            accountCleanupUtil = AccountCleanupUtil(requireContext())
-
-            val aiModelPreference = findPreference<ListPreference>("ai_model")
-            aiModelPreference?.setOnPreferenceChangeListener { _, newValue ->
-                val selectedModel = newValue as String
+        // Set up spinner listener
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedModel = parent?.getItemAtPosition(position).toString()
                 encryptedPrefs.edit().putString("selected_ai_model", selectedModel).apply()
                 updateAIModelConfiguration(selectedModel)
-                true
             }
 
-            val apiKeyPreference = findPreference<EditTextPreference>("custom_api_key")
-            apiKeyPreference?.setOnPreferenceChangeListener { _, newValue ->
-                val apiKey = newValue as String
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // Set up API key save
+        apiKeyInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val apiKey = apiKeyInput.text.toString()
                 if (isValidApiKey(apiKey)) {
                     encryptedPrefs.edit().putString("api_key", apiKey).apply()
-                    true
                 } else {
-                    Toast.makeText(context, R.string.api_key_invalid, Toast.LENGTH_LONG).show()
-                    false
+                    Toast.makeText(this, R.string.api_key_invalid, Toast.LENGTH_LONG).show()
                 }
             }
+        }
 
-            findPreference<Preference>("profile")?.setOnPreferenceClickListener {
-                startActivity(Intent(activity, ProfileActivity::class.java))
-                true
+        // Set up logout button
+        findViewById<MaterialButton>(R.id.btn_logout).setOnClickListener {
+            showLogoutConfirmationDialog()
+        }
+
+        // Set up delete account button
+        findViewById<MaterialButton>(R.id.btn_delete_account).setOnClickListener {
+            showDeleteAccountConfirmationDialog()
+        }
+    }
+
+    private fun updateAIModelConfiguration(selectedModel: String) {
+        when (selectedModel) {
+            "gemini_1_0_pro" -> {}
+            "gemini_1_0_pro_vision" -> {}
+            "gemini_1_5_flash" -> {}
+            "gemini_1_5_pro" -> {}
+        }
+    }
+
+    private fun isValidApiKey(apiKey: String): Boolean {
+        return apiKey.length == 39 && apiKey.startsWith("AIzaSy")
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Logout") { _, _ ->
+                logout()
             }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 
-            setupLogoutPreference()
-            setupDeleteAccountPreference()
-        }
-
-        private fun updateAIModelConfiguration(selectedModel: String) {
-            when (selectedModel) {
-                "gemini_1_0_pro" -> {}
-                "gemini_1_0_pro_vision" -> {}
-                "gemini_1_5_flash" -> {}
-                "gemini_1_5_pro" -> {}
-            }
-        }
-
-        private fun isValidApiKey(apiKey: String): Boolean {
-            return apiKey.length == 39 && apiKey.startsWith("AIzaSy")
-        }
-
-        private fun setupLogoutPreference() {
-            findPreference<Preference>("logout")?.setOnPreferenceClickListener {
-                showLogoutConfirmationDialog()
-                true
-            }
-        }
-
-        private fun setupDeleteAccountPreference() {
-            findPreference<Preference>("delete_account")?.setOnPreferenceClickListener {
-                showDeleteAccountConfirmationDialog()
-                true
-            }
-        }
-
-        private fun showLogoutConfirmationDialog() {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Logout") { _, _ ->
-                    logout()
+    private fun showDeleteAccountConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Account")
+            .setMessage("Are you sure you want to delete your account? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                lifecycleScope.launch {
+                    deleteAccount()
                 }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 
-        private fun showDeleteAccountConfirmationDialog() {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Delete Account")
-                .setMessage("Are you sure you want to delete your account? This action cannot be undone.")
-                .setPositiveButton("Delete") { _, _ ->
-                    lifecycleScope.launch {
-                        deleteAccount()
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
+    private fun logout() {
+        FirebaseAuthManager().signOut()
+        navigateToLogin()
+    }
 
-        private fun logout() {
-            firebaseAuthManager.signOut()
-            navigateToLogin()
-        }
+    private suspend fun deleteAccount() {
+        try {
+            val firebaseAuthManager = FirebaseAuthManager()
+            val currentUser = firebaseAuthManager.getCurrentUser()
+            val userId = currentUser?.uid
 
-        private suspend fun deleteAccount() {
-            try {
-                val currentUser = firebaseAuthManager.getCurrentUser()
-                val userId = currentUser?.uid
-
-                if (userId != null) {
-                    // First delete from Firebase Auth
-                    firebaseAuthManager.deleteAccount()
-                        .onSuccess {
-                            // Then clean up all local data
-                            lifecycleScope.launch {
-                                try {
-                                    accountCleanupUtil.cleanupUserData(userId)
-                                    navigateToLogin()
-                                    Toast.makeText(requireContext(), 
-                                        "Account deleted successfully", 
-                                        Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(requireContext(),
-                                        "Error cleaning up local data: ${e.message}",
-                                        Toast.LENGTH_LONG).show()
-                                }
+            if (userId != null) {
+                firebaseAuthManager.deleteAccount()
+                    .onSuccess {
+                        lifecycleScope.launch {
+                            try {
+                                AccountCleanupUtil(this@SettingsActivity).cleanupUserData(userId)
+                                navigateToLogin()
+                                Toast.makeText(this@SettingsActivity, 
+                                    "Account deleted successfully", 
+                                    Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(this@SettingsActivity,
+                                    "Error cleaning up local data: ${e.message}",
+                                    Toast.LENGTH_LONG).show()
                             }
                         }
-                        .onFailure { exception ->
-                            Toast.makeText(requireContext(), 
-                                "Failed to delete account: ${exception.message}", 
-                                Toast.LENGTH_LONG).show()
-                        }
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), 
-                    "An error occurred: ${e.message}", 
-                    Toast.LENGTH_LONG).show()
+                    }
+                    .onFailure { exception ->
+                        Toast.makeText(this, 
+                            "Failed to delete account: ${exception.message}", 
+                            Toast.LENGTH_LONG).show()
+                    }
             }
+        } catch (e: Exception) {
+            Toast.makeText(this, 
+                "An error occurred: ${e.message}", 
+                Toast.LENGTH_LONG).show()
         }
+    }
 
-        private fun navigateToLogin() {
-            val intent = Intent(requireContext(), LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            startActivity(intent)
-            requireActivity().finish()
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+        startActivity(intent)
+        finish()
     }
 }

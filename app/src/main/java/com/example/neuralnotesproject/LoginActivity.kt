@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.neuralnotesproject.viewmodels.AuthViewModel
 import com.example.neuralnotesproject.data.AppDatabase
 import com.example.neuralnotesproject.repository.NotebookRepository
@@ -28,6 +29,7 @@ class LoginActivity : AppCompatActivity() {
     private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.login_activity)
 
