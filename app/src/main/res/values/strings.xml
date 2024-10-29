@@ -128,4 +128,8 @@
     <string name="password_requirement_case">• Upper &amp; lowercase letters</string>
     <string name="password_requirement_number">• At least one number</string>
     <string name="password_requirement_special">• At least one special character</string>
+
+    <!-- Add these string resources -->
+    <string name="greeting">Welcome back!</string>
+    <string name="greeting_subtitle">Your digital notebooks are ready for your thoughts and ideas.</string>
 </resources>

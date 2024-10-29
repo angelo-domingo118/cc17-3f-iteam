@@ -4,34 +4,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@drawable/greeting_card_background">
 
         <TextView
             android:id="@+id/tv_greeting"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="@string/greeting"
+            android:textColor="@color/primary_text"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/dark_violet"
-            android:text="@string/greeting_placeholder"/>
+            android:textStyle="bold"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_greeting_subtitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textSize="14sp"
-            android:textColor="@color/secondary_text_color"
-            android:text="@string/greeting_message"/>
-
+            android:text="@string/greeting_subtitle"
+            android:textColor="@color/secondary_text"
+            android:textSize="16sp"/>
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
