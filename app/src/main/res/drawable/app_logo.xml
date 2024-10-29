@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+
+    <!-- Left Brain Outline -->
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m123.48 66.47c.43 12.92 1.59 125.78.28 133.63-1.18 7.07-5.7 19.84-14.33 21.18s-14.23-5.15-16.82-6-9.75 3.53-15.41-.34-4.42-14-6-15.72-10.34.31-14.54-5.49-.55-12-1.88-13.68-14.27-3.2-16.1-16.75c-2.08-15.55 10.39-18.59 10.32-21.01s-10.34-15.65-5.14-31.91 18.88-18 19.68-19.46-5.46-10.42 2.78-23.34 20.13-9.43 21.82-10.58-.29-6.24 5.44-13.45c5.29-6.66 15.41-8.3 22.72-4.09 6.63 3.86 6.75 14.09 7.18 27.01z"
+        android:alpha="0.9"/>
+
+    <!-- Right Brain Outline -->
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m132.29 63.82c-.67 13-1.88 126.42-.7 134.33 1.06 7.12 3 15.1 13.59 20.24 8 3.88 15.62-2.43 18.13-3.25s8.51.27 14.32-3.53 8.34-12.3 9.92-13.19 9.23-.12 13.6-5.89.8-11.79 1.3-13.67 11.92-4.1 14.06-16.43c2.64-15.17-9.72-19.26-10.06-21.31s9.28-9.24 6.29-23.55c-3.27-15.63-13.39-17.49-14.16-19.42s5.16-6.87 2.08-15.8-11-8.73-12.16-10.66 1.67-6.79-3.18-12.79c-5.05-6.25-15.3-3.09-17-4s-1.66-7.15-7.53-13.37c-4.6-4.87-14.63-7.39-21.29-1.73-5.91 5-6.5 11.04-7.21 24.02z"
+        android:alpha="0.9"/>
+
+    <!-- Left Brain Fill -->
+    <path
+        android:fillColor="@color/primary_text"
+        android:pathData="m123.48 66.47c.43 12.92 1.59 125.78.28 133.63-1.18 7.07-5.7 19.84-14.33 21.18s-14.23-5.15-16.82-6-9.75 3.53-15.41-.34-4.42-14-6-15.72-10.34.31-14.54-5.49-.55-12-1.88-13.68-14.27-3.2-16.1-16.75c-2.08-15.55 10.39-18.59 10.32-21.01s-10.34-15.65-5.14-31.91 18.88-18 19.68-19.46-5.46-10.42 2.78-23.34 20.13-9.43 21.82-10.58-.29-6.24 5.44-13.45c5.29-6.66 15.41-8.3 22.72-4.09 6.63 3.86 6.75 14.09 7.18 27.01z"
+        android:alpha="0.2"/>
+
+    <!-- Right Brain Fill -->
+    <path
+        android:fillColor="@color/primary_text"
+        android:pathData="m132.29 63.82c-.67 13-1.88 126.42-.7 134.33 1.06 7.12 3 15.1 13.59 20.24 8 3.88 15.62-2.43 18.13-3.25s8.51.27 14.32-3.53 8.34-12.3 9.92-13.19 9.23-.12 13.6-5.89.8-11.79 1.3-13.67 11.92-4.1 14.06-16.43c2.64-15.17-9.72-19.26-10.06-21.31s9.28-9.24 6.29-23.55c-3.27-15.63-13.39-17.49-14.16-19.42s5.16-6.87 2.08-15.8-11-8.73-12.16-10.66 1.67-6.79-3.18-12.79c-5.05-6.25-15.3-3.09-17-4s-1.66-7.15-7.53-13.37c-4.6-4.87-14.63-7.39-21.29-1.73-5.91 5-6.5 11.04-7.21 24.02z"
+        android:alpha="0.2"/>
+
+    <!-- Neural Connection -->
+    <path
+        android:fillColor="@color/accent_color"
+        android:pathData="m152.16 76c-4.5-3.15-51.77 44.84-50.25 48.77s16.93 3.7 19 6.09-16.74 44.47-13.25 47.2c2.62 2 49.83-44.23 49.13-48.38s-13.36-3.37-16.13-6 14.72-45.41 11.5-47.68z"
+        android:alpha="0.9"/>
+
+    <!-- Small Neural Points -->
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m11.15 147.17c2.17 0 15.49-3.55 17.67-4.89s-.4-8.91-2.07-9.25-15.75 3.73-17.67 4.89-.08 9.28 2.07 9.25z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m8.36 97.94c-1.7-1.74.58-8.44 3.17-8.47s14.95 4.09 16.47 5.53-.27 8.17-3.17 8.47-14.6-3.62-16.47-5.53z"
+        android:alpha="0.6"/>
+
+    <!-- Neural Points (Shining Lines) -->
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m11.15 147.17c2.17 0 15.49-3.55 17.67-4.89s-.4-8.91-2.07-9.25-15.75 3.73-17.67 4.89-.08 9.28 2.07 9.25z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m8.36 97.94c-1.7-1.74.58-8.44 3.17-8.47s14.95 4.09 16.47 5.53-.27 8.17-3.17 8.47-14.6-3.62-16.47-5.53z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m34.5 67.22c-1.09-2.18 3.14-7.85 5.61-7.09s7.89 4.87 8.79 6.68-2.76 7.69-5.61 7.09-7.59-4.3-8.79-6.68z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m24 196.51c-2.43-.12-5.31-6.58-3.44-8.37s8-4.47 10.13-4.4 5.36 6.17 3.44 8.37-7.5 4.52-10.13 4.4z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m241.72 104.39c-1.64-.17-10.78 1.87-12.52 3s .88 8.66 2.11 9.14 11-2 12.52-3-.47-8.97-2.11-9.14z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m219.86 88.45c-2.43-.09-5.38-6.52-3.52-8.33s13.66-7.32 15.74-7.26 5.57 5.83 3.67 8-13.22 7.68-15.89 7.59z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_start"
+        android:pathData="m250 142c2.06 1.29 1.41 8.34-1.1 9s-15.49-.47-17.27-1.56-1.65-8 1.1-9 15.01.13 17.27 1.56z"
+        android:alpha="0.6"/>
+    <path
+        android:fillColor="@color/button_gradient_end"
+        android:pathData="m238.12 177.63c1.72 1.72-.52 8.44-3.11 8.49s-8.52-2.18-10-3.64.21-8.17 3.11-8.49 8.11 1.75 10 3.64z"
+        android:alpha="0.6"/>
+</vector> 

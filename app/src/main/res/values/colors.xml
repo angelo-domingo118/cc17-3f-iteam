@@ -50,4 +50,13 @@
     <color name="dark_violet">#4C1D95</color>
 
     <color name="light_purple">#EECEFF</color>
+
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#272727</color>
+    <color name="primary_text">#FFFFFF</color>
+    <color name="secondary_text">#B3FFFFFF</color>
+    <color name="accent_color">#BB86FC</color>
+    <color name="button_gradient_start">#BB86FC</color>
+    <color name="button_gradient_end">#7C4DFF</color>
+    <color name="input_background">#1E1E1E</color>
 </resources>

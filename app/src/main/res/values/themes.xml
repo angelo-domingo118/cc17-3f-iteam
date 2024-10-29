@@ -10,4 +10,11 @@
     <style name="Theme.YourApp" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here -->
     </style>
+
+    <style name="Theme.NeuroNotes" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
+    </style>
 </resources>

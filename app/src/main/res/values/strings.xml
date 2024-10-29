@@ -66,13 +66,13 @@
 
     <!-- Authentication strings -->
     <string name="login">Login</string>
-    <string name="email">Email</string>
+    <string name="email">Email address</string>
     <string name="username">Username</string>
-    <string name="password">Password</string>
-    <string name="confirm_password">Confirm Password</string>
+    <string name="password">Create password</string>
+    <string name="confirm_password">Re-enter password</string>
     <string name="sign_up">Sign Up</string>
     <string name="signup">Sign Up</string>
-    <string name="dont_have_account">Don\'t have an account? Sign up</string>
+    <string name="dont_have_account">Don\'t have an account? </string>
     <string name="already_have_account">Already have an account?</string>
 
     <!-- Profile and Settings strings -->
@@ -108,4 +108,24 @@
     </string-array>
 
     <string name="api_key_invalid">The API key entered is invalid. Please check and try again.</string>
+
+    <string name="app_title">NeuroNotes</string>
+    <string name="app_tagline">Unlock Your Mind\'s Potential</string>
+    <string name="app_subtitle">Transform your thoughts into organized brilliance</string>
+    <string name="company_name">PANTASA</string>
+
+    <!-- Add these new strings -->
+    <string name="app_name_neuro">Neuro</string>
+    <string name="app_name_notes">Notes</string>
+    <string name="signup_subtitle">Join us to unlock your mind\'s potential</string>
+    <string name="email_hint">Enter your email address</string>
+    <string name="password_hint">Create a strong password</string>
+    <string name="password_helper_text">Must be at least 8 characters</string>
+    <string name="email_helper_text">Enter a valid email address</string>
+    <string name="confirm_password_hint">Re-enter your password</string>
+    <string name="password_requirements">Password must contain:</string>
+    <string name="password_requirement_length">• At least 8 characters</string>
+    <string name="password_requirement_case">• Upper &amp; lowercase letters</string>
+    <string name="password_requirement_number">• At least one number</string>
+    <string name="password_requirement_special">• At least one special character</string>
 </resources>

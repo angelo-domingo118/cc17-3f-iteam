@@ -2,18 +2,18 @@ package com.example.neuralnotesproject
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.example.neuralnotesproject.viewmodels.AuthViewModel
+import com.google.android.material.textfield.TextInputEditText
 
 class SignupActivity : AppCompatActivity() {
-    private lateinit var etUsername: EditText
-    private lateinit var etPassword: EditText
-    private lateinit var etConfirmPassword: EditText
+    private lateinit var etEmail: TextInputEditText
+    private lateinit var etPassword: TextInputEditText
+    private lateinit var etConfirmPassword: TextInputEditText
     private lateinit var btnSignup: Button
     private lateinit var tvLogin: TextView
 
@@ -23,18 +23,18 @@ class SignupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.signup_activity)
 
-        etUsername = findViewById(R.id.et_signup_username)
+        etEmail = findViewById(R.id.et_signup_email)
         etPassword = findViewById(R.id.et_signup_password)
         etConfirmPassword = findViewById(R.id.et_confirm_password)
         btnSignup = findViewById(R.id.btn_signup)
         tvLogin = findViewById(R.id.tv_login)
 
         btnSignup.setOnClickListener {
-            val username = etUsername.text.toString().trim()
+            val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString()
             val confirmPassword = etConfirmPassword.text.toString()
 
-            authViewModel.register(username, password, confirmPassword)
+            authViewModel.register(email, password, confirmPassword)
         }
 
         tvLogin.setOnClickListener {
