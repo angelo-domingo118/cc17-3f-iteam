@@ -5,51 +5,58 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/popup_background"
-    android:padding="8dp">
+    android:padding="4dp"
+    android:minWidth="160dp">
 
     <LinearLayout
         android:id="@+id/rename_option"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_rename"
-            app:tint="@android:color/white"
+            app:tint="@color/primary_text"
             android:contentDescription="@string/rename_icon"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/rename"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:layout_marginStart="8dp"/>
+            android:textColor="@color/primary_text"
+            android:textSize="16sp"
+            android:layout_marginStart="12dp"/>
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/delete_option"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_delete"
-            app:tint="@android:color/white"
+            app:tint="@color/primary_text"
             android:contentDescription="@string/delete_icon"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/delete"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:layout_marginStart="8dp"/>
+            android:textColor="@color/primary_text"
+            android:textSize="16sp"
+            android:layout_marginStart="12dp"/>
     </LinearLayout>
 </LinearLayout>

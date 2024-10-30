@@ -132,6 +132,16 @@ class NotebookInteractionActivity : AppCompatActivity() {
         setupTabLayout()
         setupMessageHandling()
         setupRecyclerView()
+
+        // Add this code for back button
+        findViewById<ImageView>(R.id.iv_back).setOnClickListener {
+            onBackPressed()
+        }
+
+        // Add this code for more options button
+        findViewById<ImageView>(R.id.iv_more_options).setOnClickListener { view ->
+            showPopupMenu(view)
+        }
     }
 
     private fun initializeViews() {
@@ -342,5 +352,81 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     fun onWebsiteUrlSelected(url: String) {
         selectedWebsiteUrl = url
+    }
+
+    private fun showPopupMenu(anchorView: View) {
+        val popupView = LayoutInflater.from(this).inflate(R.layout.popup_notebook_options, null)
+        
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            elevation = 10f
+            setBackgroundDrawable(null)
+            isOutsideTouchable = true
+        }
+
+        // Set up click listeners for popup menu items
+        popupView.findViewById<LinearLayout>(R.id.rename_option).setOnClickListener {
+            // Handle rename action
+            popupWindow.dismiss()
+            showRenameDialog()
+        }
+
+        popupView.findViewById<LinearLayout>(R.id.delete_option).setOnClickListener {
+            // Handle delete action
+            popupWindow.dismiss()
+            showDeleteDialog()
+        }
+
+        // Calculate position for popup
+        val location = IntArray(2)
+        anchorView.getLocationInWindow(location)
+        
+        // Show popup below the anchor view with proper alignment
+        popupWindow.showAsDropDown(
+            anchorView,
+            -popupWindow.width + anchorView.width,  // Align right edge with anchor
+            0
+        )
+    }
+
+    private fun showRenameDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rename_notebook, null)
+        val editText = dialogView.findViewById<EditText>(R.id.et_notebook_name)
+        editText.setText(findViewById<TextView>(R.id.tv_title).text)
+
+        AlertDialog.Builder(this)
+            .setTitle("Rename Notebook")
+            .setView(dialogView)
+            .setPositiveButton("Rename") { _, _ ->
+                val newTitle = editText.text.toString().trim()
+                if (newTitle.isNotEmpty()) {
+                    // Update the title in the UI
+                    findViewById<TextView>(R.id.tv_title).text = newTitle
+                    
+                    // Update the notebook in the database using notebookId
+                    notebookViewModel.renameNotebook(notebookId, newTitle)
+                    Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDeleteDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Notebook")
+            .setMessage("Are you sure you want to delete this notebook? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                // Delete using notebookId
+                notebookViewModel.deleteNotebook(notebookId)
+                Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
+                finish() // Close the activity after deletion
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }

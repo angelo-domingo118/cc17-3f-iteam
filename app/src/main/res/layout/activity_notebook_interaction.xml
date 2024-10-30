@@ -172,6 +172,8 @@
                     app:hintEnabled="false"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:layout_constraintEnd_toStartOf="@id/btn_send"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
