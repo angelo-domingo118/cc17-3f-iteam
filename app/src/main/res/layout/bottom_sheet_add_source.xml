@@ -3,9 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/light_purple"
+    android:background="@color/background"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="32dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -13,16 +15,18 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"
         android:text="@string/add_sources"
-        android:textColor="@color/dark_violet"
+        android:textColor="@color/primary_text"
         android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium" />
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/surface_dark">
 
         <LinearLayout
             android:id="@+id/btn_add_from_files"
@@ -38,7 +42,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_file"
-                app:tint="@color/gradient_end" />
+                app:tint="@color/accent_color" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -46,20 +50,22 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="16dp"
                 android:text="@string/add_from_files"
-                android:textColor="@color/dark_violet"
-                android:textSize="18sp" />
+                android:textColor="@color/primary_text"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/surface_dark">
 
         <LinearLayout
-            android:id="@+id/btn_website_link"
+            android:id="@+id/btn_add_website"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
@@ -72,7 +78,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_link"
-                app:tint="@color/gradient_end" />
+                app:tint="@color/accent_color" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -80,16 +86,18 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="16dp"
                 android:text="@string/website_link"
-                android:textColor="@color/dark_violet"
-                android:textSize="18sp" />
+                android:textColor="@color/primary_text"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/surface_dark">
 
         <LinearLayout
             android:id="@+id/btn_paste_text"
@@ -105,7 +113,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_paste"
-                app:tint="@color/gradient_end" />
+                app:tint="@color/accent_color" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -113,9 +121,10 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="16dp"
                 android:text="@string/paste_text"
-                android:textColor="@color/dark_violet"
-                android:textSize="18sp" />
+                android:textColor="@color/primary_text"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

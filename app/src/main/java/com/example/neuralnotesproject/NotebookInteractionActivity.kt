@@ -17,11 +17,10 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 import com.google.ai.client.generativeai.GenerativeModel
 import androidx.lifecycle.lifecycleScope
 import com.google.ai.client.generativeai.type.generationConfig
-import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import java.io.File
@@ -49,6 +48,10 @@ import com.example.neuralnotesproject.data.Source
 import com.example.neuralnotesproject.data.SourceType
 import com.example.neuralnotesproject.util.FileStorageManager
 import java.util.UUID
+import com.google.android.material.tabs.TabLayout
+import com.google.ai.client.generativeai.type.Content
+import com.google.ai.client.generativeai.type.GenerateContentResponse
+import com.example.neuralnotesproject.data.Message
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: NotebookViewModel
@@ -56,7 +59,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var messageAdapter: MessageAdapter
     private lateinit var inputEditText: TextInputEditText
-    private lateinit var sendButton: FloatingActionButton
+    private lateinit var sendButton: MaterialButton
     private lateinit var generativeModel: GenerativeModel
 
     private var currentFragment: Fragment? = null
@@ -73,12 +76,26 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private var selectedFileUri: Uri? = null
     private var selectedWebsiteUrl: String? = null
 
-    private lateinit var btnSource: MaterialButton
-    private lateinit var btnNotes: MaterialButton
-    private lateinit var btnChat: MaterialButton
+    private lateinit var navigationTabs: TabLayout
 
     private lateinit var progressBar: ProgressBar
     private var isLoading = false
+
+    private fun setupMessageHandling() {
+        messageAdapter = MessageAdapter(
+            messages = chatContext,
+            onMessageClick = { message -> handleMessageSave(message) }
+        )
+        recyclerView.apply {
+            adapter = messageAdapter
+            layoutManager = LinearLayoutManager(this@NotebookInteractionActivity)
+        }
+    }
+
+    private fun handleMessageSave(message: Message) {
+        // Handle message save
+        Toast.makeText(this, "Message saved", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,397 +122,39 @@ class NotebookInteractionActivity : AppCompatActivity() {
         inputEditText = findViewById(R.id.et_user_input)
         sendButton = findViewById(R.id.btn_send)
 
-        messageAdapter = MessageAdapter(chatContext, ::onSaveButtonClick)
-        recyclerView.adapter = messageAdapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
         // Initialize Gemini API with Flash model
         initializeGeminiApi()
 
         progressBar = findViewById(R.id.progressBar)
         progressBar.visibility = View.GONE
 
-        sendButton.setOnClickListener {
-            val message = inputEditText.text.toString().trim()
-            if (message.isNotEmpty()) {
-                // Check if we're in a fragment view
-                if (findViewById<FrameLayout>(R.id.fragment_container).visibility == View.VISIBLE) {
-                    // If in a fragment, switch to chat view before sending the message
-                    showChatView()
-                }
-                sendMessage()
-            }
-        }
-
-        // Implement back button functionality
-        val backButton: ImageView = findViewById(R.id.iv_back)
-        backButton.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-
-        // Implement more options button functionality
-        val moreOptionsButton: ImageView = findViewById(R.id.iv_more_options)
-        moreOptionsButton.setOnClickListener { view ->
-            showPopupWindow(view)
-        }
-
-        // Find the Source button and set its click listener
-        findViewById<MaterialButton>(R.id.btn_source).setOnClickListener {
-            showSourcesFragment()
-        }
-
-        // Find the Notes button and set its click listener
-        findViewById<MaterialButton>(R.id.btn_notes).setOnClickListener {
-            showNotesFragment()
-        }
-
-        // Find the Chat button and set its click listener
-        findViewById<MaterialButton>(R.id.btn_chat).setOnClickListener {
-            showChatView()
-        }
-
         initializeViews()
-        setupListeners()
+        setupTabLayout()
+        setupMessageHandling()
+        setupRecyclerView()
     }
 
     private fun initializeViews() {
-        btnSource = findViewById(R.id.btn_source)
-        btnNotes = findViewById(R.id.btn_notes)
-        btnChat = findViewById(R.id.btn_chat)
+        navigationTabs = findViewById(R.id.tab_layout)
     }
 
-    private fun setupListeners() {
-        btnSource.setOnClickListener {
-            showSourcesFragment()
-        }
-
-        btnNotes.setOnClickListener {
-            showNotesFragment()
-        }
-
-        btnChat.setOnClickListener {
-            showChatView()
-        }
-    }
-
-    private fun updateButtonStates(selectedButton: MaterialButton) {
-        btnSource.isSelected = selectedButton == btnSource
-        btnNotes.isSelected = selectedButton == btnNotes
-        btnChat.isSelected = selectedButton == btnChat
-    }
-
-    fun onSelectedNotesChanged(notes: List<Note>) {
-        selectedNotes = notes
-        selectedNotesContent = notes.joinToString("\n\n") { "${it.title}\n${it.content}" }
-    }
-
-    fun onSelectedSourcesChanged(sources: List<Source>) {
-        selectedSources = sources
-        selectedSourcesContent = sources.joinToString("\n\n") { "${it.name}\n${it.content}" }
-    }
-
-    fun onFileSelected(uri: Uri) {
-        selectedFileUri = uri
-    }
-
-    fun onWebsiteUrlSelected(url: String) {
-        selectedWebsiteUrl = url
-        lifecycleScope.launch {
-            try {
-                val content = withContext(Dispatchers.IO) {
-                    URL(url).readText()
-                }
-                // Create a source with the fetched content
-                val source = Source(
-                    id = UUID.randomUUID().toString(),
-                    name = url,
-                    type = SourceType.WEBSITE,
-                    content = content,
-                    filePath = null, // Add null filePath for WEBSITE type
-                    notebookId = notebookId
-                )
-                // Add to selected sources
-                selectedSources = selectedSources + source
-                selectedSourcesContent = buildSelectedSourcesContent()
-            } catch (e: Exception) {
-                Log.e("NotebookInteraction", "Error fetching website content", e)
-                Toast.makeText(this@NotebookInteractionActivity, 
-                    "Failed to load website content", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun buildSelectedSourcesContent(): String {
-        return selectedSources.joinToString("\n\n") { source ->
-            when (source.type) {
-                SourceType.PASTE_TEXT -> "${source.name}\n${source.content}"
-                SourceType.WEBSITE -> "Website: ${source.name}\n${source.content}"
-                SourceType.FILE -> {
-                    try {
-                        val fileContent = source.filePath?.let { path ->
-                            File(path).readText()
-                        } ?: "Unable to read file content"
-                        "File: ${source.name}\n$fileContent"
-                    } catch (e: Exception) {
-                        Log.e("NotebookInteraction", "Error reading file: ${e.message}")
-                        "Error reading file ${source.name}: ${e.message}"
-                    }
+    private fun setupTabLayout() {
+        navigationTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> showSourcesFragment()
+                    1 -> showNotesFragment()
+                    2 -> showChatView()
                 }
             }
-        }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
     }
 
-    private fun sendMessage() {
-        val message = inputEditText.text.toString().trim()
-        if (message.isNotEmpty()) {
-            setLoadingState(true)
-            
-            val userMessage = Message(message, true)
-            messageAdapter.addMessage(userMessage)
-            // Remove this line to prevent duplication
-            // chatContext.add(userMessage)
-            inputEditText.text?.clear()
-
-            lifecycleScope.launch {
-                try {
-                    val prompt = buildPromptWithContext(message)
-                    val response = generativeModel.generateContent(prompt)
-                    val aiResponse = response.text ?: "Sorry, I couldn't generate a response."
-                    val aiMessage = Message(aiResponse, false)
-                    messageAdapter.addMessage(aiMessage)
-                    // Remove this line to prevent duplication
-                    // chatContext.add(aiMessage)
-                    recyclerView.scrollToPosition(messageAdapter.itemCount - 1)
-                    
-                    // Clear the selected file and website URL after processing
-                    selectedFileUri = null
-                    selectedWebsiteUrl = null
-                } catch (e: Exception) {
-                    showError("Failed to generate AI response: ${e.message}")
-                } finally {
-                    setLoadingState(false)
-                }
-            }
-        }
-    }
-
-    private fun setLoadingState(loading: Boolean) {
-        isLoading = loading
-        inputEditText.isEnabled = !loading
-        sendButton.isEnabled = !loading
-        
-        if (loading) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (isLoading) {
-                    progressBar.visibility = View.VISIBLE
-                }
-            }, 300) // Show loading indicator after 300ms if still loading
-        } else {
-            progressBar.visibility = View.GONE
-        }
-    }
-
-    private suspend fun buildPromptWithContext(userMessage: String): String {
-        val sourcesFragment = supportFragmentManager.fragments
-            .firstOrNull { it is SourcesFragment } as? SourcesFragment
-            
-        val selectedSources = sourcesFragment?.getSelectedItems() ?: emptyList()  // Use the new public method
-        
-        val contextBuilder = StringBuilder()
-        
-        // Add selected sources content
-        selectedSources.forEach { source ->
-            when (source.type) {
-                SourceType.FILE -> {
-                    try {
-                        val fileContent = source.filePath?.let { path ->
-                            File(path).readText()
-                        } ?: source.content
-                        contextBuilder.append("Content from file '${source.name}':\n")
-                        contextBuilder.append(fileContent)
-                        contextBuilder.append("\n\n")
-                    } catch (e: Exception) {
-                        Log.e("NotebookInteraction", "Error reading file: ${e.message}")
-                    }
-                }
-                SourceType.WEBSITE -> {
-                    contextBuilder.append("Content from website '${source.name}':\n")
-                    contextBuilder.append(source.content)
-                    contextBuilder.append("\n\n")
-                }
-                SourceType.PASTE_TEXT -> {
-                    contextBuilder.append("Content from text '${source.name}':\n")
-                    contextBuilder.append(source.content)
-                    contextBuilder.append("\n\n")
-                }
-            }
-        }
-
-        return if (contextBuilder.isNotEmpty()) {
-            """
-            Context:
-            ${contextBuilder}
-            
-            Based on the above context, please respond to this message:
-            $userMessage
-            """.trimIndent()
-        } else {
-            userMessage
-        }
-    }
-
-    private suspend fun fetchWebsiteContent(url: String): String {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = URL(url).readText()
-                response
-            } catch (e: Exception) {
-                Log.e("NotebookInteractionActivity", "Error fetching website content", e)
-                "Error fetching website content: ${e.message}"
-            }
-        }
-    }
-
-    private fun getFileContent(uri: Uri): String {
-        return try {
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                inputStream.bufferedReader().use { it.readText() }
-            } ?: "Unable to read file content"
-        } catch (e: Exception) {
-            Log.e("NotebookInteractionActivity", "Error reading file content", e)
-            "Error reading file content: ${e.message}"
-        }
-    }
-
-    private fun onSaveButtonClick(message: Message) {
-        if (!message.isUser) {
-            saveMessageToNotes(message.content)
-        }
-    }
-
-    private fun saveMessageToNotes(content: String) {
-        try {
-            // Use the NotesFragment's addNote method instead of file operations
-            notesFragment?.addNote(
-                title = "Untitled Note",
-                content = content
-            )
-            Toast.makeText(this, "Message saved to notes", Toast.LENGTH_SHORT).show()
-            // Remove refreshNotes() call since LiveData will handle updates
-        } catch (e: Exception) {
-            Log.e("NotebookInteractionActivity", "Error saving message to notes", e)
-            Toast.makeText(this, "Failed to save message", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
-
-    private fun getRandomResponse(): String {
-        val responses = listOf(
-            "Interesting thought!",
-            "Tell me more about that.",
-            "I see what you mean.",
-            "That's a great point!",
-            "I hadn't considered that before."
-        )
-        return responses[Random.nextInt(responses.size)]
-    }
-
-    private fun showPopupWindow(anchorView: View) {
-        val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val popupView = inflater.inflate(R.layout.popup_notebook_options, null)
-
-        val popupWindow = PopupWindow(
-            popupView,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        )
-
-        val deleteOption = popupView.findViewById<LinearLayout>(R.id.delete_option)
-        val renameOption = popupView.findViewById<LinearLayout>(R.id.rename_option)
-
-        deleteOption.setOnClickListener {
-            deleteNotebook()
-            popupWindow.dismiss()
-        }
-
-        renameOption.setOnClickListener {
-            showRenameDialog()
-            popupWindow.dismiss()
-        }
-
-        popupWindow.elevation = 10f
-        popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
-    }
-
-    private fun deleteNotebook() {
-        AlertDialog.Builder(this)
-            .setTitle("Delete Notebook")
-            .setMessage("Are you sure you want to delete this notebook?")
-            .setPositiveButton("Delete") { _, _ ->
-                notebookViewModel.deleteNotebook(notebookId)
-                // Delete from storage
-                val folder = File(filesDir, notebookId)
-                if (folder.exists() && folder.isDirectory) {
-                    folder.deleteRecursively()
-                }
-                Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
-                
-                // Set result to indicate deletion
-                setResult(RESULT_OK, Intent().putExtra("DELETED_NOTEBOOK_ID", notebookId))
-                finish() // Close the activity after deleting
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showRenameDialog() {
-        val input = EditText(this)
-        input.setText(notebookViewModel.getNotebook(notebookId).value?.title)
-        
-        AlertDialog.Builder(this)
-            .setTitle("Rename Notebook")
-            .setView(input)
-            .setPositiveButton("Rename") { _, _ ->
-                val newTitle = input.text.toString()
-                if (newTitle.isNotEmpty()) {
-                    renameNotebook(newTitle)
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun renameNotebook(newTitle: String) {
-        notebookViewModel.renameNotebook(notebookId, newTitle)
-        findViewById<TextView>(R.id.tv_title).text = newTitle
-        Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
-
-        // Update the notebook in storage
-        updateNotebookInStorage(notebookId, newTitle)
-
-        // Set result to indicate renaming
-        setResult(RESULT_OK, Intent().putExtra("RENAMED_NOTEBOOK_ID", notebookId)
-                                     .putExtra("NEW_TITLE", newTitle))
-    }
-
-    private fun updateNotebookInStorage(notebookId: String, newTitle: String) {
-        val folder = File(filesDir, notebookId)
-        val file = File(folder, "notebook_details.txt")
-        if (file.exists()) {
-            try {
-                val lines = file.readLines()
-                if (lines.size >= 3) {
-                    val updatedLines = listOf(lines[0], newTitle, lines[2])
-                    file.writeText(updatedLines.joinToString("\n"))
-                }
-            } catch (e: IOException) {
-                Log.e("NotebookInteractionActivity", "Error updating notebook in storage", e)
-            }
-        }
+    private fun updateTabStates(selectedPosition: Int) {
+        navigationTabs.getTabAt(selectedPosition)?.select()
     }
 
     private fun showSourcesFragment() {
@@ -514,7 +173,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         currentFragment = sourcesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
-        updateButtonStates(btnSource)
+        updateTabStates(0)
     }
 
     private fun showNotesFragment() {
@@ -530,11 +189,10 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 .commit()
         }
         supportFragmentManager.executePendingTransactions()
-        // Notes will be automatically updated through LiveData observation
         currentFragment = notesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
-        updateButtonStates(btnNotes)
+        updateTabStates(1)
     }
 
     private fun showChatView() {
@@ -542,7 +200,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
         currentFragment = null
-        updateButtonStates(btnChat)
+        updateTabStates(2)
     }
 
     private fun hideCurrentFragment() {
@@ -575,5 +233,114 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 maxOutputTokens = 1024
             }
         )
+    }
+
+    private fun setupRecyclerView() {
+        recyclerView = findViewById(R.id.recyclerView)
+        messageAdapter = MessageAdapter(
+            messages = chatContext,
+            onMessageClick = { message -> 
+                // Handle message click if needed
+            }
+        )
+        recyclerView.apply {
+            adapter = messageAdapter
+            layoutManager = LinearLayoutManager(this@NotebookInteractionActivity)
+        }
+    }
+
+    private fun sendMessage(message: String) {
+        // Add message to chat
+        val userMessage = Message(message, true)
+        chatContext.add(userMessage)
+        messageAdapter.addMessage(userMessage)
+        
+        // Show loading state
+        isLoading = true
+        progressBar.visibility = View.VISIBLE
+        
+        // Generate AI response
+        lifecycleScope.launch {
+            try {
+                val response = generateResponse(message)
+                val aiMessage = Message(response, false)
+                chatContext.add(aiMessage)
+                messageAdapter.addMessage(aiMessage)
+            } catch (e: Exception) {
+                Toast.makeText(this@NotebookInteractionActivity, 
+                    "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                isLoading = false
+                progressBar.visibility = View.GONE
+            }
+        }
+    }
+
+    private suspend fun generateResponse(userMessage: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val prompt = buildString {
+                    append("Context:\n")
+                    if (selectedNotesContent.isNotEmpty()) {
+                        append("Selected Notes:\n$selectedNotesContent\n\n")
+                    }
+                    if (selectedSourcesContent.isNotEmpty()) {
+                        append("Selected Sources:\n$selectedSourcesContent\n\n")
+                    }
+                    append("User Message: $userMessage")
+                }
+
+                // Use generateContent with String parameter
+                val response = generativeModel.generateContent(prompt)
+                response.text ?: "Sorry, I couldn't generate a response."
+            } catch (e: Exception) {
+                Log.e("AI Response", "Error generating response", e)
+                "Sorry, there was an error generating the response: ${e.message}"
+            }
+        }
+    }
+
+    private fun showPopupWindow(anchorView: View) {
+        val popupView = LayoutInflater.from(this)
+            .inflate(R.layout.popup_menu, null)
+        
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        // Update the popup menu item finding
+        popupView.findViewById<TextView>(R.id.save_button)?.setOnClickListener {
+            onSaveButtonClick()
+            popupWindow.dismiss()
+        }
+        
+        popupWindow.showAsDropDown(anchorView)
+    }
+
+    private fun onSaveButtonClick() {
+        // Implement save functionality
+        Toast.makeText(this, "Saving...", Toast.LENGTH_SHORT).show()
+        // Add your save logic here
+    }
+
+    fun onSelectedNotesChanged(notes: List<Note>) {
+        selectedNotes = notes
+        selectedNotesContent = notes.joinToString("\n\n") { "${it.title}\n${it.content}" }
+    }
+
+    fun onSelectedSourcesChanged(sources: List<Source>) {
+        selectedSources = sources
+        selectedSourcesContent = sources.joinToString("\n\n") { "${it.name}\n${it.content}" }
+    }
+
+    fun onFileSelected(uri: Uri) {
+        selectedFileUri = uri
+    }
+
+    fun onWebsiteUrlSelected(url: String) {
+        selectedWebsiteUrl = url
     }
 }

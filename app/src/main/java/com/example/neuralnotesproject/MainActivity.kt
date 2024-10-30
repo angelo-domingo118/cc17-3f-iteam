@@ -49,6 +49,9 @@ import com.example.neuralnotesproject.viewmodels.NotebookViewModel
 import com.google.android.material.textfield.TextInputEditText
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.app.Activity
+import android.widget.ImageButton
+import androidx.appcompat.widget.PopupMenu
 
 class MainActivity : AppCompatActivity() {
 
@@ -435,6 +438,38 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_CANCELED && data?.getBooleanExtra("show_bottom_sheet", false) == true) {
+            showAddSourceBottomSheet()
+        }
+    }
+
+    private fun showAddSourceBottomSheet() {
+        val bottomSheetFragment = AddSourceBottomSheetFragment()
+        bottomSheetFragment.show(supportFragmentManager, AddSourceBottomSheetFragment.TAG)
+    }
+
+    private fun showPopupMenu(view: View, notebook: Notebook) {
+        PopupMenu(this, view).apply {
+            menuInflater.inflate(R.menu.notebook_menu, menu)
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.menu_rename -> {
+                        showRenameDialog(notebook)
+                        true
+                    }
+                    R.id.menu_delete -> {
+                        showDeleteDialog(notebook)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            show()
+        }
     }
 }
 

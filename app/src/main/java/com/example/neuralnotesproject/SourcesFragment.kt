@@ -33,6 +33,7 @@ import com.example.neuralnotesproject.repository.SourceRepository
 import com.example.neuralnotesproject.viewmodels.SourceViewModel
 import com.example.neuralnotesproject.viewmodels.SourceViewModelFactory
 import com.example.neuralnotesproject.util.FileStorageManager
+import android.content.Context
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -46,6 +47,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
     // Removed: private lateinit var geminiTextExtractor: GeminiTextExtractor
     private lateinit var notebookId: String
     private lateinit var sourceViewModel: SourceViewModel
+    private lateinit var activity: NotebookInteractionActivity
 
     private val pasteNotesLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -310,5 +312,25 @@ class SourcesFragment : Fragment(), SourceActionListener {
     // Add this public method to access selected items
     fun getSelectedItems(): List<Source> {
         return sourceAdapter.getSelectedItems()
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity = context as NotebookInteractionActivity
+    }
+
+    // When updating selected sources
+    private fun updateSelectedSources(sources: List<Source>) {
+        activity.onSelectedSourcesChanged(sources)
+    }
+
+    // When a file is selected
+    private fun handleFileSelection(uri: Uri) {
+        activity.onFileSelected(uri)
+    }
+
+    // When a website URL is selected
+    private fun handleWebsiteSelection(url: String) {
+        activity.onWebsiteUrlSelected(url)
     }
 }

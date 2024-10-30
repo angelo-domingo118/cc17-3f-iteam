@@ -64,4 +64,7 @@
     <color name="surface">#272727</color>
     <color name="primary_purple">#7C4DFF</color>
     <color name="error_red">#FF5252</color>
+
+    <!-- Add this color -->
+    <color name="accent_color_10">#1A8B00FF</color>  <!-- Accent color with 10% opacity -->
 </resources>

@@ -15,11 +15,12 @@ import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.getSpans
 import com.example.neuralnotesproject.NotesFragment.Companion.EXTRA_NOTE_ID
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 
 class EditNoteActivity : AppCompatActivity() {
 
@@ -32,7 +33,7 @@ class EditNoteActivity : AppCompatActivity() {
     private lateinit var btnBulletList: ImageButton
     private lateinit var btnNumberedList: ImageButton
     private lateinit var btnIndent: ImageButton
-    private lateinit var fabSave: FloatingActionButton
+    private lateinit var fabSave: MaterialButton
 
     private var isBold = false
     private var isItalic = false
@@ -50,11 +51,36 @@ class EditNoteActivity : AppCompatActivity() {
         initViews()
         setupListeners()
 
+        // Add back button functionality
+        findViewById<ImageView>(R.id.btn_back).setOnClickListener {
+            onBackPressed()
+        }
+
         // Load existing note data if available
         noteId = intent.getStringExtra(NotesFragment.EXTRA_NOTE_ID)
         if (noteId != null) {
             etNoteTitle.setText(intent.getStringExtra(NotesFragment.EXTRA_NOTE_TITLE))
             etNoteContent.setText(intent.getStringExtra(NotesFragment.EXTRA_NOTE_CONTENT))
+        }
+    }
+
+    // Add override for back press to handle unsaved changes
+    override fun onBackPressed() {
+        // Check if there are unsaved changes
+        val title = etNoteTitle.text.toString().trim()
+        val content = etNoteContent.text.toString().trim()
+
+        if (title.isNotEmpty() || content.isNotEmpty()) {
+            // Show confirmation dialog
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Unsaved Changes")
+                .setMessage("Do you want to save your changes?")
+                .setPositiveButton("Save") { _, _ -> saveNote() }
+                .setNegativeButton("Discard") { _, _ -> super.onBackPressed() }
+                .setNeutralButton("Cancel", null)
+                .show()
+        } else {
+            super.onBackPressed()
         }
     }
 

@@ -29,6 +29,7 @@ class NotesFragment : Fragment() {
     private lateinit var noteAdapter: NoteAdapter
     private lateinit var noteViewModel: NoteViewModel
     private var notebookId: String = ""
+    private lateinit var activity: NotebookInteractionActivity
 
     private val editNoteActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -50,6 +51,11 @@ class NotesFragment : Fragment() {
     }
 
     private val selectedNotes = mutableSetOf<Note>()
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity = context as NotebookInteractionActivity
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,7 +121,7 @@ class NotesFragment : Fragment() {
     }
 
     private fun onSelectedNotesChanged(selectedNotes: List<Note>) {
-        (activity as? NotebookInteractionActivity)?.onSelectedNotesChanged(selectedNotes)
+        activity.onSelectedNotesChanged(selectedNotes)
     }
 
     // Remove this method as it's no longer needed

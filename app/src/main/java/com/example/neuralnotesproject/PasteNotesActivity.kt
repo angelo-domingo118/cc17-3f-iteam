@@ -17,10 +17,10 @@ class PasteNotesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_paste_notes)
+        setContentView(R.layout.layout_paste_notes)
 
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
-            finish()
+            onBackPressed()
         }
 
         findViewById<MaterialButton>(R.id.btn_insert).setOnClickListener {
@@ -35,5 +35,12 @@ class PasteNotesActivity : AppCompatActivity() {
                 Toast.makeText(this, "Please paste some text", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        val intent = Intent()
+        intent.putExtra("show_bottom_sheet", true)
+        setResult(Activity.RESULT_CANCELED, intent)
     }
 }

@@ -36,7 +36,7 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
             launchFilePicker()
         }
 
-        view.findViewById<View>(R.id.btn_website_link).setOnClickListener {
+        view.findViewById<View>(R.id.btn_add_website).setOnClickListener {
             showWebsiteUrlInput()
         }
 
