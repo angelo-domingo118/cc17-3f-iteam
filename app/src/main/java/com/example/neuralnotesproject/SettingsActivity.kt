@@ -2,7 +2,6 @@ package com.example.neuralnotesproject
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
@@ -18,6 +17,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.view.LayoutInflater
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var currentEmailTextView: TextView
@@ -47,56 +49,39 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.btn_delete_account).setOnClickListener {
-            showDeleteAccountConfirmationDialog()
+            showDeleteAccountDialog()
         }
     }
 
     private fun showChangePasswordDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_change_password, null)
-        val currentPasswordInput = dialogView.findViewById<TextInputEditText>(R.id.et_current_password)
-        val newPasswordInput = dialogView.findViewById<TextInputEditText>(R.id.et_new_password)
-        val confirmPasswordInput = dialogView.findViewById<TextInputEditText>(R.id.et_confirm_password)
-
-        val dialog = MaterialAlertDialogBuilder(this)
+        val dialog = MaterialAlertDialogBuilder(this, R.style.CustomMaterialDialog)
             .setView(dialogView)
-            .setPositiveButton("Change", null)
-            .setNegativeButton("Cancel", null)
             .create()
 
-        dialog.setOnShowListener {
-            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener {
-                val currentPassword = currentPasswordInput.text.toString()
-                val newPassword = newPasswordInput.text.toString()
-                val confirmPassword = confirmPasswordInput.text.toString()
+        // Remove any default background from the dialog window
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        
+        // Find views
+        val currentPassword = dialogView.findViewById<TextInputEditText>(R.id.et_current_password)
+        val newPassword = dialogView.findViewById<TextInputEditText>(R.id.et_new_password)
+        val confirmPassword = dialogView.findViewById<TextInputEditText>(R.id.et_confirm_password)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel)
+        val btnChange = dialogView.findViewById<MaterialButton>(R.id.btn_change)
 
-                when {
-                    currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty() -> {
-                        Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    newPassword != confirmPassword -> {
-                        Toast.makeText(this, "New passwords don't match", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    newPassword.length < 8 -> {
-                        Toast.makeText(this, "Password must be at least 8 characters", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                }
+        // Set click listeners
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
 
-                // Show loading state
-                positiveButton.isEnabled = false
-                positiveButton.text = "Changing..."
-
+        btnChange.setOnClickListener {
+            val currentPw = currentPassword.text.toString()
+            val newPw = newPassword.text.toString()
+            val confirmPw = confirmPassword.text.toString()
+            
+            if (validatePasswordInputs(currentPw, newPw, confirmPw)) {
                 lifecycleScope.launch {
-                    try {
-                        changePassword(currentPassword, newPassword)
-                        dialog.dismiss()
-                    } catch (e: Exception) {
-                        positiveButton.isEnabled = true
-                        positiveButton.text = "Change"
-                    }
+                    handlePasswordChange(currentPw, newPw, dialog)
                 }
             }
         }
@@ -104,7 +89,7 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private suspend fun changePassword(currentPassword: String, newPassword: String) {
+    private suspend fun handlePasswordChange(currentPassword: String, newPassword: String, dialog: AlertDialog) {
         try {
             val user = firebaseAuth.currentUser
             if (user != null) {
@@ -120,6 +105,7 @@ class SettingsActivity : AppCompatActivity() {
                 // Change password
                 user.updatePassword(newPassword).await()
                 Toast.makeText(this, "Password updated successfully", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to change password: ${e.message}", Toast.LENGTH_LONG).show()
@@ -138,17 +124,76 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showDeleteAccountConfirmationDialog() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Delete Account")
-            .setMessage("Are you sure you want to permanently delete your account? This action cannot be undone.")
-            .setPositiveButton("Delete") { _, _ ->
+    private fun showDeleteAccountDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete_account, null)
+        val dialog = MaterialAlertDialogBuilder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        // Remove any default background from the dialog window
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        
+        // Find views
+        val passwordInput = dialogView.findViewById<TextInputEditText>(R.id.et_password)
+        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btn_cancel)
+        val btnDelete = dialogView.findViewById<MaterialButton>(R.id.btn_delete)
+
+        // Set click listeners
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnDelete.setOnClickListener {
+            val password = passwordInput.text.toString()
+            if (password.isNotEmpty()) {
                 lifecycleScope.launch {
-                    deleteAccount()
+                    handleAccountDeletion(password, dialog)
                 }
+            } else {
+                passwordInput.error = "Password is required"
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.show()
+    }
+
+    private suspend fun handleAccountDeletion(password: String, dialog: AlertDialog) {
+        try {
+            val user = firebaseAuth.currentUser
+            if (user != null && user.email != null) {
+                // Re-authenticate and delete account
+                val firebaseAuthManager = FirebaseAuthManager()
+                firebaseAuthManager.reauthenticateAndDelete(user.email!!, password)
+                    .onSuccess {
+                        // Clean up local data
+                        val userId = user.uid
+                        AccountCleanupUtil(this@SettingsActivity).cleanupUserData(userId)
+                        
+                        // Navigate to login screen
+                        navigateToLogin()
+                        
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            "Account deleted successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        dialog.dismiss()
+                    }
+                    .onFailure { exception ->
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            "Failed to delete account: ${exception.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this@SettingsActivity,
+                "Authentication failed: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun navigateToLogin() {
@@ -158,39 +203,21 @@ class SettingsActivity : AppCompatActivity() {
         finish()
     }
 
-    private suspend fun deleteAccount() {
-        try {
-            val firebaseAuthManager = FirebaseAuthManager()
-            val currentUser = firebaseAuthManager.getCurrentUser()
-            val userId = currentUser?.uid
-
-            if (userId != null) {
-                firebaseAuthManager.deleteAccount()
-                    .onSuccess {
-                        lifecycleScope.launch {
-                            try {
-                                AccountCleanupUtil(this@SettingsActivity).cleanupUserData(userId)
-                                navigateToLogin()
-                                Toast.makeText(this@SettingsActivity, 
-                                    "Account deleted successfully", 
-                                    Toast.LENGTH_SHORT).show()
-                            } catch (e: Exception) {
-                                Toast.makeText(this@SettingsActivity,
-                                    "Error cleaning up local data: ${e.message}",
-                                    Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    }
-                    .onFailure { exception ->
-                        Toast.makeText(this, 
-                            "Failed to delete account: ${exception.message}", 
-                            Toast.LENGTH_LONG).show()
-                    }
+    private fun validatePasswordInputs(currentPw: String, newPw: String, confirmPw: String): Boolean {
+        when {
+            currentPw.isEmpty() || newPw.isEmpty() || confirmPw.isEmpty() -> {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return false
             }
-        } catch (e: Exception) {
-            Toast.makeText(this, 
-                "An error occurred: ${e.message}", 
-                Toast.LENGTH_LONG).show()
+            newPw != confirmPw -> {
+                Toast.makeText(this, "New passwords don't match", Toast.LENGTH_SHORT).show()
+                return false
+            }
+            newPw.length < 8 -> {
+                Toast.makeText(this, "Password must be at least 8 characters", Toast.LENGTH_SHORT).show()
+                return false
+            }
         }
+        return true
     }
 }

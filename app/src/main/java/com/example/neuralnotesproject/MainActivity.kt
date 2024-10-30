@@ -47,6 +47,8 @@ import com.example.neuralnotesproject.viewmodels.NotebookViewModelFactory
 import com.example.neuralnotesproject.data.Notebook
 import com.example.neuralnotesproject.viewmodels.NotebookViewModel
 import com.google.android.material.textfield.TextInputEditText
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 
 class MainActivity : AppCompatActivity() {
 
@@ -144,37 +146,38 @@ class MainActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_new_notebook, null)
         val notebookNameInput = dialogView.findViewById<TextInputEditText>(R.id.et_notebook_name)
         
-        val dialog = AlertDialog.Builder(this, R.style.DarkDialog)
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
             .setView(dialogView)
-            .setPositiveButton("Create") { _, _ ->
-                val notebookName = notebookNameInput.text.toString()
-                if (notebookName.isNotEmpty()) {
-                    val currentDateTime = LocalDateTime.now()
-                    val formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy HH:mm:ss")
-                    val formattedDate = currentDateTime.format(formatter)
-                    
-                    val newNotebook = Notebook(
-                        id = UUID.randomUUID().toString(),
-                        userId = userId,
-                        title = notebookName,
-                        creationDate = formattedDate
-                    )
-                    notebookViewModel.addNotebook(newNotebook)
-                }
-            }
-            .setNegativeButton("Cancel", null)
             .create()
 
-        dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_background)
-        dialog.show()
+        // Set click listeners for buttons
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
 
-        // Style the dialog buttons
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
-            setTextColor(ContextCompat.getColor(context, R.color.primary_text))
+        dialogView.findViewById<MaterialButton>(R.id.btn_create).setOnClickListener {
+            val notebookName = notebookNameInput.text.toString()
+            if (notebookName.isNotEmpty()) {
+                val currentDateTime = LocalDateTime.now()
+                val formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy HH:mm:ss")
+                val formattedDate = currentDateTime.format(formatter)
+                
+                val newNotebook = Notebook(
+                    id = UUID.randomUUID().toString(),
+                    userId = userId,
+                    title = notebookName,
+                    creationDate = formattedDate
+                )
+                notebookViewModel.addNotebook(newNotebook)
+                dialog.dismiss()
+            } else {
+                notebookNameInput.error = "Please enter a notebook name"
+            }
         }
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
-            setTextColor(ContextCompat.getColor(context, R.color.secondary_text))
-        }
+
+        // Remove default background and set custom background
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     private fun saveNotebook(notebook: Notebook) {

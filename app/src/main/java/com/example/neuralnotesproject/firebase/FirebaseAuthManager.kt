@@ -1,5 +1,6 @@
 package com.example.neuralnotesproject.firebase
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
@@ -25,10 +26,31 @@ class FirebaseAuthManager {
         }
     }
 
+    suspend fun reauthenticateAndDelete(email: String, password: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser
+            if (user != null) {
+                val credential = EmailAuthProvider.getCredential(email, password)
+                user.reauthenticate(credential).await()
+                user.delete().await()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No user logged in"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun deleteAccount(): Result<Unit> {
         return try {
-            auth.currentUser?.delete()?.await()
-            Result.success(Unit)
+            val user = auth.currentUser
+            if (user != null) {
+                user.delete().await()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No user logged in"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
