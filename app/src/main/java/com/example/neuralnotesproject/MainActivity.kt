@@ -262,41 +262,58 @@ class MainActivity : AppCompatActivity() {
 
     private fun deleteNotebook(position: Int) {
         val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
-        AlertDialog.Builder(this)
-            .setTitle("Delete Notebook")
-            .setMessage("Are you sure you want to delete this notebook?")
-            .setPositiveButton("Delete") { _, _ ->
-                notebookViewModel.deleteNotebook(notebook)
-                
-                // Delete from storage
-                val folder = File(filesDir, notebook.id)
-                if (folder.exists() && folder.isDirectory) {
-                    folder.deleteRecursively()
-                }
-                
-                Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete_notebook, null)
+        
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_delete).setOnClickListener {
+            notebookViewModel.deleteNotebook(notebook)
+            
+            // Delete from storage
+            val folder = File(filesDir, notebook.id)
+            if (folder.exists() && folder.isDirectory) {
+                folder.deleteRecursively()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     private fun showRenameDialog(position: Int) {
         val notebook = notebookViewModel.notebooks.value?.get(position) ?: return
-        val input = EditText(this)
-        input.setText(notebook.title)
-        
-        AlertDialog.Builder(this)
-            .setTitle("Rename Notebook")
-            .setView(input)
-            .setPositiveButton("Rename") { _, _ ->
-                val newTitle = input.text.toString()
-                if (newTitle.isNotEmpty()) {
-                    notebookViewModel.renameNotebook(notebook.id, newTitle)
-                    Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
-                }
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rename_notebook, null)
+        val editText = dialogView.findViewById<TextInputEditText>(R.id.et_notebook_name)
+        editText.setText(notebook.title)
+
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_rename).setOnClickListener {
+            val newTitle = editText.text.toString().trim()
+            if (newTitle.isNotEmpty()) {
+                notebookViewModel.renameNotebook(notebook.id, newTitle)
+                Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     private fun onNotebookClick(position: Int) {
@@ -305,6 +322,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, NotebookInteractionActivity::class.java).apply {
                 putExtra("NOTEBOOK_ID", it.id)
                 putExtra("NOTEBOOK_TITLE", it.title)
+                putExtra("USER_ID", userId)
             }
             notebookInteractionLauncher.launch(intent)
         }
@@ -409,35 +427,52 @@ class MainActivity : AppCompatActivity() {
         popupWindow.showAsDropDown(view)
     }
 
-    private fun showRenameDialog(notebook: Notebook) {  // Changed to take Notebook parameter
-        val input = EditText(this)
-        input.setText(notebook.title)
-        
-        AlertDialog.Builder(this)
-            .setTitle("Rename Notebook")
-            .setView(input)
-            .setPositiveButton("Rename") { _, _ ->
-                val newTitle = input.text.toString()
-                if (newTitle.isNotEmpty()) {
-                    val updatedNotebook = notebook.copy(title = newTitle)
-                    notebookViewModel.updateNotebook(updatedNotebook)
-                    Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
-                }
+    private fun showRenameDialog(notebook: Notebook) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rename_notebook, null)
+        val editText = dialogView.findViewById<TextInputEditText>(R.id.et_notebook_name)
+        editText.setText(notebook.title)
+
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_rename).setOnClickListener {
+            val newTitle = editText.text.toString().trim()
+            if (newTitle.isNotEmpty()) {
+                val updatedNotebook = notebook.copy(title = newTitle)
+                notebookViewModel.updateNotebook(updatedNotebook)
+                Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     private fun showDeleteDialog(notebook: Notebook) {
-        AlertDialog.Builder(this)
-            .setTitle("Delete Notebook")
-            .setMessage("Are you sure you want to delete this notebook?")
-            .setPositiveButton("Delete") { _, _ ->
-                notebookViewModel.deleteNotebook(notebook)
-                Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete_notebook, null)
+        
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_delete).setOnClickListener {
+            notebookViewModel.deleteNotebook(notebook)
+            Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

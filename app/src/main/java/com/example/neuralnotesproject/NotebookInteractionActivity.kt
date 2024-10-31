@@ -52,10 +52,18 @@ import com.google.android.material.tabs.TabLayout
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.example.neuralnotesproject.data.Message
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import com.example.neuralnotesproject.data.AppDatabase
+import com.example.neuralnotesproject.repository.NotebookRepository
+import com.example.neuralnotesproject.viewmodels.NotebookViewModelFactory
+import com.example.neuralnotesproject.adapters.MessageAdapter
+import androidx.constraintlayout.widget.ConstraintLayout
 
 class NotebookInteractionActivity : AppCompatActivity() {
-    private lateinit var notebookViewModel: NotebookViewModel
-    private lateinit var notebookId: String
+    private lateinit var notebookViewModel: com.example.neuralnotesproject.viewmodels.NotebookViewModel
+    private var notebookId: String = ""
+    private var userId: String = ""
     private lateinit var recyclerView: RecyclerView
     private lateinit var messageAdapter: MessageAdapter
     private lateinit var inputEditText: TextInputEditText
@@ -82,13 +90,23 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private var isLoading = false
 
     private fun setupMessageHandling() {
-        messageAdapter = MessageAdapter(
-            messages = chatContext,
-            onMessageClick = { message -> handleMessageSave(message) }
-        )
+        messageAdapter = MessageAdapter(chatContext) { message ->
+            handleMessageSave(message)
+        }
+        
         recyclerView.apply {
             adapter = messageAdapter
-            layoutManager = LinearLayoutManager(this@NotebookInteractionActivity)
+            layoutManager = LinearLayoutManager(this@NotebookInteractionActivity).apply {
+                stackFromEnd = true
+            }
+        }
+
+        sendButton.setOnClickListener {
+            val userMessage = inputEditText.text.toString().trim()
+            if (userMessage.isNotEmpty()) {
+                sendMessage(userMessage)
+                inputEditText.text?.clear()
+            }
         }
     }
 
@@ -101,46 +119,105 @@ class NotebookInteractionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notebook_interaction)
 
-        // Retrieve the notebook title from the intent
-        val notebookTitle = intent.getStringExtra("NOTEBOOK_TITLE") ?: "Notebook"
-
-        // Find the TextView and set its text to the notebook title
-        val titleTextView: TextView = findViewById(R.id.tv_title)
-        titleTextView.text = notebookTitle
-
-        notebookViewModel = ViewModelProvider(this)[NotebookViewModel::class.java]
-
         notebookId = intent.getStringExtra("NOTEBOOK_ID") ?: return
+        userId = intent.getStringExtra("USER_ID") ?: return
 
-        notebookViewModel.getNotebook(notebookId).observe(this) { notebook ->
-            notebook?.let {
-                // You can use other notebook details as needed
-            }
-        }
-
+        // Initialize views
         recyclerView = findViewById(R.id.recyclerView)
         inputEditText = findViewById(R.id.et_user_input)
         sendButton = findViewById(R.id.btn_send)
+        progressBar = findViewById(R.id.progressBar)
+        navigationTabs = findViewById(R.id.tab_layout)
 
-        // Initialize Gemini API with Flash model
+        // Initialize ViewModel
+        val database = AppDatabase.getDatabase(applicationContext)
+        val repository = NotebookRepository(database.notebookDao())
+        notebookViewModel = ViewModelProvider(
+            this,
+            NotebookViewModelFactory(repository, userId)
+        )[com.example.neuralnotesproject.viewmodels.NotebookViewModel::class.java]
+
+        // Initialize Gemini API
         initializeGeminiApi()
 
-        progressBar = findViewById(R.id.progressBar)
-        progressBar.visibility = View.GONE
-
-        initializeViews()
-        setupTabLayout()
+        // Setup message handling
         setupMessageHandling()
-        setupRecyclerView()
 
-        // Add this code for back button
-        findViewById<ImageView>(R.id.iv_back).setOnClickListener {
-            onBackPressed()
+        // Setup navigation
+        setupNavigation()
+
+        // Setup click listeners
+        setupClickListeners()
+
+        // Select chat tab immediately and show welcome message
+        navigationTabs.getTabAt(2)?.select()
+        showChatView()
+        showWelcomeMessage()
+
+        // Observe notebook changes
+        notebookViewModel.getNotebook(notebookId).observe(this) { notebook ->
+            notebook?.let {
+                findViewById<TextView>(R.id.tv_title).text = it.title
+            }
         }
 
-        // Add this code for more options button
-        findViewById<ImageView>(R.id.iv_more_options).setOnClickListener { view ->
-            showPopupMenu(view)
+        // Initially show Sources fragment
+        showFragment(SourcesFragment.newInstance(notebookId))
+    }
+
+    private fun setupNavigation() {
+        navigationTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> { // Sources
+                        hideCurrentFragment()
+                        if (sourcesFragment == null) {
+                            sourcesFragment = SourcesFragment.newInstance(notebookId)
+                        }
+                        showFragment(sourcesFragment!!)
+                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
+                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
+                    }
+                    1 -> { // Notes
+                        hideCurrentFragment()
+                        if (notesFragment == null) {
+                            notesFragment = NotesFragment.newInstance(notebookId)
+                        }
+                        showFragment(notesFragment!!)
+                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
+                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
+                    }
+                    2 -> { // Chat
+                        hideCurrentFragment()
+                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
+                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
+                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.VISIBLE
+                        currentFragment = null
+                    }
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+    }
+
+    private fun showFragment(fragment: Fragment) {
+        currentFragment = fragment
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
+    }
+
+    private fun setupClickListeners() {
+        findViewById<ImageView>(R.id.iv_back).setOnClickListener {
+            finish()
+        }
+
+        findViewById<ImageView>(R.id.iv_more_options).setOnClickListener {
+            showPopupMenu(it)
         }
     }
 
@@ -171,18 +248,13 @@ class NotebookInteractionActivity : AppCompatActivity() {
         hideCurrentFragment()
         if (sourcesFragment == null) {
             sourcesFragment = SourcesFragment.newInstance(notebookId)
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragment_container, sourcesFragment!!)
-                .commit()
-        } else {
-            supportFragmentManager.beginTransaction()
-                .show(sourcesFragment!!)
-                .commit()
         }
-        supportFragmentManager.executePendingTransactions()
-        currentFragment = sourcesFragment
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, sourcesFragment!!)
+            .commit()
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
         updateTabStates(0)
     }
 
@@ -190,18 +262,13 @@ class NotebookInteractionActivity : AppCompatActivity() {
         hideCurrentFragment()
         if (notesFragment == null) {
             notesFragment = NotesFragment.newInstance(notebookId)
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragment_container, notesFragment!!)
-                .commit()
-        } else {
-            supportFragmentManager.beginTransaction()
-                .show(notesFragment!!)
-                .commit()
         }
-        supportFragmentManager.executePendingTransactions()
-        currentFragment = notesFragment
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, notesFragment!!)
+            .commit()
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
+        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
         updateTabStates(1)
     }
 
@@ -209,6 +276,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         hideCurrentFragment()
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
+        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.VISIBLE
         currentFragment = null
         updateTabStates(2)
     }
@@ -233,15 +301,17 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun initializeGeminiApi() {
+        val config = generationConfig {
+            temperature = 0.7f
+            topK = 40
+            topP = 0.95f
+            maxOutputTokens = 1024
+        }
+
         generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash-002",
+            modelName = "gemini-pro",
             apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
-            generationConfig = generationConfig {
-                temperature = 0.7f
-                topK = 40
-                topP = 0.95f
-                maxOutputTokens = 1024
-            }
+            generationConfig = config
         )
     }
 
@@ -259,52 +329,61 @@ class NotebookInteractionActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendMessage(message: String) {
-        // Add message to chat
-        val userMessage = Message(message, true)
-        chatContext.add(userMessage)
-        messageAdapter.addMessage(userMessage)
-        
-        // Show loading state
-        isLoading = true
+    private fun sendMessage(userMessage: String) {
+        // Add user message to chat
+        val userMsg = Message(
+            content = userMessage,
+            isUser = true,
+            notebookId = notebookId
+        )
+        chatContext.add(userMsg)
+        messageAdapter.updateMessages(chatContext)
+        recyclerView.scrollToPosition(chatContext.size - 1)
+
+        // Show loading
         progressBar.visibility = View.VISIBLE
-        
+        isLoading = true
+
         // Generate AI response
         lifecycleScope.launch {
             try {
-                val response = generateResponse(message)
-                val aiMessage = Message(response, false)
-                chatContext.add(aiMessage)
-                messageAdapter.addMessage(aiMessage)
+                val response = generateAiResponse(userMessage)
+                
+                // Add AI response to chat
+                val aiMsg = Message(
+                    content = response,
+                    isUser = false,
+                    notebookId = notebookId
+                )
+                chatContext.add(aiMsg)
+                
+                withContext(Dispatchers.Main) {
+                    messageAdapter.updateMessages(chatContext)
+                    recyclerView.scrollToPosition(chatContext.size - 1)
+                    progressBar.visibility = View.GONE
+                    isLoading = false
+                }
             } catch (e: Exception) {
-                Toast.makeText(this@NotebookInteractionActivity, 
-                    "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-            } finally {
-                isLoading = false
-                progressBar.visibility = View.GONE
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@NotebookInteractionActivity,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    progressBar.visibility = View.GONE
+                    isLoading = false
+                }
             }
         }
     }
 
-    private suspend fun generateResponse(userMessage: String): String {
+    private suspend fun generateAiResponse(userMessage: String): String {
         return withContext(Dispatchers.IO) {
             try {
-                val prompt = buildString {
-                    append("Context:\n")
-                    if (selectedNotesContent.isNotEmpty()) {
-                        append("Selected Notes:\n$selectedNotesContent\n\n")
-                    }
-                    if (selectedSourcesContent.isNotEmpty()) {
-                        append("Selected Sources:\n$selectedSourcesContent\n\n")
-                    }
-                    append("User Message: $userMessage")
-                }
-
-                // Use generateContent with String parameter
+                val prompt = "User: $userMessage\nAssistant:"
                 val response = generativeModel.generateContent(prompt)
                 response.text ?: "Sorry, I couldn't generate a response."
             } catch (e: Exception) {
-                Log.e("AI Response", "Error generating response", e)
                 "Sorry, there was an error generating the response: ${e.message}"
             }
         }
@@ -395,38 +474,107 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private fun showRenameDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rename_notebook, null)
-        val editText = dialogView.findViewById<EditText>(R.id.et_notebook_name)
+        val editText = dialogView.findViewById<TextInputEditText>(R.id.et_notebook_name)
         editText.setText(findViewById<TextView>(R.id.tv_title).text)
 
-        AlertDialog.Builder(this)
-            .setTitle("Rename Notebook")
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
             .setView(dialogView)
-            .setPositiveButton("Rename") { _, _ ->
-                val newTitle = editText.text.toString().trim()
-                if (newTitle.isNotEmpty()) {
-                    // Update the title in the UI
-                    findViewById<TextView>(R.id.tv_title).text = newTitle
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_rename).setOnClickListener {
+            val newTitle = editText.text.toString().trim()
+            if (newTitle.isNotEmpty()) {
+                // Get current notebook and update it
+                notebookViewModel.getNotebook(notebookId).value?.let { notebook ->
+                    val updatedNotebook = notebook.copy(title = newTitle)
+                    notebookViewModel.updateNotebook(updatedNotebook)
                     
-                    // Update the notebook in the database using notebookId
-                    notebookViewModel.renameNotebook(notebookId, newTitle)
+                    // Send result back to MainActivity for sync
+                    val intent = Intent().apply {
+                        putExtra("RENAMED_NOTEBOOK_ID", notebookId)
+                        putExtra("NEW_TITLE", newTitle)
+                    }
+                    setResult(RESULT_OK, intent)
+                    
                     Toast.makeText(this, "Notebook renamed", Toast.LENGTH_SHORT).show()
                 }
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
     }
 
     private fun showDeleteDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Delete Notebook")
-            .setMessage("Are you sure you want to delete this notebook? This action cannot be undone.")
-            .setPositiveButton("Delete") { _, _ ->
-                // Delete using notebookId
-                notebookViewModel.deleteNotebook(notebookId)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_delete_notebook, null)
+        
+        val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+            .setView(dialogView)
+            .create()
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<MaterialButton>(R.id.btn_delete).setOnClickListener {
+            // Get current notebook and delete it
+            notebookViewModel.getNotebook(notebookId).value?.let { notebook ->
+                notebookViewModel.deleteNotebook(notebook)
+                
+                // Delete associated files
+                val folder = File(filesDir, notebookId)
+                if (folder.exists() && folder.isDirectory) {
+                    folder.deleteRecursively()
+                }
+                
                 Toast.makeText(this, "Notebook deleted", Toast.LENGTH_SHORT).show()
-                finish() // Close the activity after deletion
+                
+                // Set result and finish activity
+                setResult(RESULT_OK, Intent().apply {
+                    putExtra("DELETED_NOTEBOOK_ID", notebookId)
+                })
+                finish()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            dialog.dismiss()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    private fun showWelcomeMessage() {
+        val welcomeMessage = Message(
+            content = """
+                👋 Welcome to Neural Notes! I'm your AI assistant. Here's what I can help you with:
+
+                📝 Notes Management:
+                - Summarize your notes
+                - Extract key points
+                - Generate study questions
+                
+                📚 Source Analysis:
+                - Analyze documents and websites
+                - Extract relevant information
+                - Compare different sources
+
+                💡 Study Help:
+                - Answer questions about your notes
+                - Explain complex topics
+                - Help with research
+
+                Just select your notes/sources and ask me anything! How can I help you today?
+            """.trimIndent(),
+            isUser = false,
+            notebookId = notebookId
+        )
+        
+        chatContext.add(welcomeMessage)
+        messageAdapter.notifyItemInserted(chatContext.size - 1)
+        recyclerView.scrollToPosition(chatContext.size - 1)
     }
 }

@@ -83,6 +83,9 @@ dependencies {
 
     // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Gemini Pro
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
 }
 
 configurations.all {

@@ -67,4 +67,7 @@
 
     <!-- Add this color -->
     <color name="accent_color_10">#1A8B00FF</color>  <!-- Accent color with 10% opacity -->
+
+    <color name="warning_color">#FFA726</color>
+    <color name="error_color">#EF5350</color>
 </resources>

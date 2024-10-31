@@ -108,21 +108,9 @@ class SourcesFragment : Fragment(), SourceActionListener {
             sourceAdapter.updateSources(sources)
         }
 
-        // Set up buttons
+        // Set up add source button
         view.findViewById<MaterialButton>(R.id.btn_add_source).setOnClickListener {
             showAddSourceBottomSheet()
-        }
-
-        view.findViewById<MaterialButton>(R.id.btn_select_all).setOnClickListener {
-            sourceAdapter.selectAll()
-        }
-
-        view.findViewById<MaterialButton>(R.id.btn_unselect_all).setOnClickListener {
-            sourceAdapter.unselectAll()
-        }
-
-        view.findViewById<MaterialButton>(R.id.btn_delete).setOnClickListener {
-            deleteSelectedSources()
         }
     }
 

@@ -7,57 +7,42 @@
     android:background="@drawable/dialog_background"
     android:padding="24dp">
 
+    <!-- Warning Icon -->
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_warning"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"
+        app:tint="@color/warning_color"/>
+
     <!-- Dialog Title -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Rename Notebook"
+        android:text="Delete Notebook"
         android:textColor="@color/primary_text"
         android:textSize="24sp"
         android:textStyle="bold"
+        android:gravity="center"
         android:layout_marginBottom="8dp"/>
 
-    <!-- Subtitle -->
+    <!-- Message -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enter a new name for your notebook"
+        android:text="This action cannot be undone. All notes and data will be permanently deleted."
         android:textColor="@color/secondary_text"
         android:textSize="14sp"
+        android:gravity="center"
         android:layout_marginBottom="24dp"/>
-
-    <!-- Input Field -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Notebook Name"
-        app:boxStrokeColor="@color/accent_color"
-        app:hintTextColor="@color/accent_color"
-        android:textColorHint="@color/secondary_text"
-        app:boxBackgroundColor="@color/surface_dark"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_notebook_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/primary_text"
-            android:textSize="16sp"
-            android:inputType="text"
-            android:maxLines="1"/>
-
-    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Button Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="24dp">
+        android:layout_marginTop="8dp">
 
         <!-- Cancel Button -->
         <com.google.android.material.button.MaterialButton
@@ -72,18 +57,18 @@
             app:cornerRadius="12dp"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
-        <!-- Rename Button -->
+        <!-- Delete Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_rename"
+            android:id="@+id/btn_delete"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Rename"
+            android:text="Delete"
             android:textColor="@color/primary_text"
             android:textSize="16sp"
             app:cornerRadius="12dp"
-            android:background="@drawable/gradient_button_background"/>
+            android:backgroundTint="@color/error_color"/>
 
     </LinearLayout>
 </LinearLayout> 

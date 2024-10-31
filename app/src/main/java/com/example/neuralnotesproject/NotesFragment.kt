@@ -105,19 +105,6 @@ class NotesFragment : Fragment() {
         view.findViewById<MaterialButton>(R.id.btn_add_note).setOnClickListener {
             launchEditNoteActivity()
         }
-
-        // Set up bottom action bar buttons
-        view.findViewById<MaterialButton>(R.id.btn_select_all).setOnClickListener {
-            noteAdapter.selectAll()
-        }
-
-        view.findViewById<MaterialButton>(R.id.btn_unselect_all).setOnClickListener {
-            noteAdapter.unselectAll()
-        }
-
-        view.findViewById<MaterialButton>(R.id.btn_delete).setOnClickListener {
-            deleteSelectedNotes()
-        }
     }
 
     private fun onSelectedNotesChanged(selectedNotes: List<Note>) {
