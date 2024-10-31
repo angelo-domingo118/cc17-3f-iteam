@@ -59,6 +59,7 @@ import com.example.neuralnotesproject.repository.NotebookRepository
 import com.example.neuralnotesproject.viewmodels.NotebookViewModelFactory
 import com.example.neuralnotesproject.adapters.MessageAdapter
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.example.neuralnotesproject.ui.TypingIndicator
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: com.example.neuralnotesproject.viewmodels.NotebookViewModel
@@ -86,8 +87,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private lateinit var navigationTabs: TabLayout
 
-    private lateinit var progressBar: ProgressBar
-    private var isLoading = false
+    private lateinit var typingIndicator: TypingIndicator
 
     private fun setupMessageHandling() {
         messageAdapter = MessageAdapter(chatContext) { message ->
@@ -126,8 +126,9 @@ class NotebookInteractionActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         inputEditText = findViewById(R.id.et_user_input)
         sendButton = findViewById(R.id.btn_send)
-        progressBar = findViewById(R.id.progressBar)
         navigationTabs = findViewById(R.id.tab_layout)
+
+        typingIndicator = findViewById(R.id.typing_indicator)
 
         // Initialize ViewModel
         val database = AppDatabase.getDatabase(applicationContext)
@@ -340,9 +341,9 @@ class NotebookInteractionActivity : AppCompatActivity() {
         messageAdapter.updateMessages(chatContext)
         recyclerView.scrollToPosition(chatContext.size - 1)
 
-        // Show loading
-        progressBar.visibility = View.VISIBLE
-        isLoading = true
+        // Show typing indicator
+        typingIndicator.visibility = View.VISIBLE
+        typingIndicator.startAnimation()
 
         // Generate AI response
         lifecycleScope.launch {
@@ -358,20 +359,20 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 chatContext.add(aiMsg)
                 
                 withContext(Dispatchers.Main) {
+                    typingIndicator.stopAnimation()
+                    typingIndicator.visibility = View.GONE
                     messageAdapter.updateMessages(chatContext)
                     recyclerView.scrollToPosition(chatContext.size - 1)
-                    progressBar.visibility = View.GONE
-                    isLoading = false
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    typingIndicator.stopAnimation()
+                    typingIndicator.visibility = View.GONE
                     Toast.makeText(
                         this@NotebookInteractionActivity,
                         "Error: ${e.message}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    progressBar.visibility = View.GONE
-                    isLoading = false
                 }
             }
         }
