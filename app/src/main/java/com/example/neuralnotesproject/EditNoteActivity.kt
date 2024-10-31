@@ -13,10 +13,12 @@ import android.text.style.LeadingMarginSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
+import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.getSpans
 import com.example.neuralnotesproject.NotesFragment.Companion.EXTRA_NOTE_ID
@@ -34,6 +36,7 @@ class EditNoteActivity : AppCompatActivity() {
     private lateinit var btnNumberedList: ImageButton
     private lateinit var btnIndent: ImageButton
     private lateinit var fabSave: MaterialButton
+    private lateinit var btnCheckbox: ImageButton
 
     private var isBold = false
     private var isItalic = false
@@ -41,8 +44,20 @@ class EditNoteActivity : AppCompatActivity() {
     private var isStrikethrough = false
     private var isBulletList = false
     private var isNumberedList = false
+    private var isCheckboxList = false
 
     private var noteId: String? = null
+
+    private var currentListNumber = 1
+
+    companion object {
+        const val EXTRA_NOTE_TITLE = "extra_note_title"
+        const val EXTRA_NOTE_CONTENT = "extra_note_content"
+        const val CHECKBOX_UNCHECKED = "⬜"
+        const val CHECKBOX_CHECKED = "☑️"
+        const val CHECKBOX_SIZE = 36f
+        const val CHECKBOX_PADDING = 16f
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,19 +81,33 @@ class EditNoteActivity : AppCompatActivity() {
 
     // Add override for back press to handle unsaved changes
     override fun onBackPressed() {
-        // Check if there are unsaved changes
         val title = etNoteTitle.text.toString().trim()
         val content = etNoteContent.text.toString().trim()
 
         if (title.isNotEmpty() || content.isNotEmpty()) {
-            // Show confirmation dialog
-            androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Unsaved Changes")
-                .setMessage("Do you want to save your changes?")
-                .setPositiveButton("Save") { _, _ -> saveNote() }
-                .setNegativeButton("Discard") { _, _ -> super.onBackPressed() }
-                .setNeutralButton("Cancel", null)
-                .show()
+            val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_unsaved_changes, null)
+            val dialog = AlertDialog.Builder(this, R.style.CustomMaterialDialog)
+                .setView(dialogView)
+                .create()
+
+            // Save button
+            dialogView.findViewById<MaterialButton>(R.id.btn_save).setOnClickListener {
+                saveNote()
+                dialog.dismiss()
+            }
+
+            // Discard button
+            dialogView.findViewById<MaterialButton>(R.id.btn_discard).setOnClickListener {
+                dialog.dismiss()
+                super.onBackPressed()
+            }
+
+            // Cancel button
+            dialogView.findViewById<MaterialButton>(R.id.btn_cancel).setOnClickListener {
+                dialog.dismiss()
+            }
+
+            dialog.show()
         } else {
             super.onBackPressed()
         }
@@ -95,6 +124,12 @@ class EditNoteActivity : AppCompatActivity() {
         btnNumberedList = findViewById(R.id.btn_numbered_list)
         btnIndent = findViewById(R.id.btn_indent)
         fabSave = findViewById(R.id.fab_save)
+        btnCheckbox = findViewById(R.id.btn_checkbox)
+
+        etNoteContent.apply {
+            textSize = 18f
+            setLineSpacing(CHECKBOX_PADDING, 1.2f)
+        }
     }
 
     private fun setupListeners() {
@@ -106,6 +141,7 @@ class EditNoteActivity : AppCompatActivity() {
         btnNumberedList.setOnClickListener { toggleNumberedList() }
         btnIndent.setOnClickListener { applyIndentation() }
         fabSave.setOnClickListener { saveNote() }
+        btnCheckbox.setOnClickListener { toggleCheckboxList() }
 
         etNoteContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -120,15 +156,59 @@ class EditNoteActivity : AppCompatActivity() {
                 applyCurrentFormatting(s)
             }
         })
+
+        etNoteContent.setOnClickListener { view ->
+            val position = etNoteContent.selectionStart
+            val text = etNoteContent.text
+            val lineStart = text.lastIndexOf('\n', position - 1).let { if (it == -1) 0 else it + 1 }
+            
+            // Check if click was near checkbox
+            if (position >= lineStart && position <= lineStart + 2) {
+                val currentLine = text.substring(lineStart, text.indexOf('\n', position).let { if (it == -1) text.length else it })
+                if (currentLine.startsWith(CHECKBOX_UNCHECKED) || currentLine.startsWith(CHECKBOX_CHECKED)) {
+                    toggleCheckboxState(position)
+                }
+            }
+        }
     }
 
     private fun toggleStyle(style: Int) {
-        when (style) {
-            Typeface.BOLD -> isBold = !isBold
-            Typeface.ITALIC -> isItalic = !isItalic
+        val text = etNoteContent.text as Spannable
+        val selectionStart = etNoteContent.selectionStart
+        val selectionEnd = etNoteContent.selectionEnd
+
+        if (selectionStart == selectionEnd) {
+            // No text selected, track state for future input
+            when (style) {
+                Typeface.BOLD -> isBold = !isBold
+                Typeface.ITALIC -> isItalic = !isItalic
+            }
+            updateButtonStates()
+        } else {
+            // Text is selected, apply/remove formatting
+            val spans = text.getSpans<StyleSpan>(selectionStart, selectionEnd)
+            val hasStyle = spans.any { it.style == style }
+
+            // Remove existing style spans in selection
+            spans.filter { it.style == style }.forEach { text.removeSpan(it) }
+
+            // Apply new span if style wasn't present
+            if (!hasStyle) {
+                text.setSpan(
+                    StyleSpan(style),
+                    selectionStart,
+                    selectionEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+
+            // Update button state based on current selection
+            when (style) {
+                Typeface.BOLD -> isBold = !hasStyle
+                Typeface.ITALIC -> isItalic = !hasStyle
+            }
+            updateButtonStates()
         }
-        updateButtonStates()
-        updateSpans()
     }
 
     private fun toggleUnderline() {
@@ -144,17 +224,136 @@ class EditNoteActivity : AppCompatActivity() {
     }
 
     private fun toggleBulletList() {
-        isBulletList = !isBulletList
-        isNumberedList = false
+        val text = etNoteContent.text
+        val selectionStart = etNoteContent.selectionStart
+        val selectionEnd = etNoteContent.selectionEnd
+
+        if (selectionStart == selectionEnd) {
+            // Single line conversion
+            val lineStart = text.lastIndexOf('\n', selectionStart - 1).let { if (it == -1) 0 else it + 1 }
+            val lineEnd = text.indexOf('\n', selectionStart).let { if (it == -1) text.length else it }
+            val currentLine = text.substring(lineStart, lineEnd)
+
+            if (currentLine.startsWith("• ")) {
+                // Remove bullet
+                text.delete(lineStart, lineStart + 2)
+                isBulletList = false
+                currentListNumber = 1
+            } else if (currentLine.matches(Regex("\\d+\\.\\s.*"))) {
+                // Replace numbered list with bullet
+                val numberEnd = currentLine.indexOf('.') + 2
+                text.delete(lineStart, lineStart + numberEnd)
+                text.insert(lineStart, "• ")
+                isBulletList = true
+                currentListNumber = 1
+            } else {
+                // Add bullet
+                text.insert(lineStart, "• ")
+                isBulletList = true
+                currentListNumber = 1
+            }
+        } else {
+            isBulletList = !isBulletList
+            isNumberedList = false
+            applyListStyle()
+        }
         updateButtonStates()
-        applyListStyle()
     }
 
     private fun toggleNumberedList() {
-        isNumberedList = !isNumberedList
-        isBulletList = false
+        val text = etNoteContent.text
+        val selectionStart = etNoteContent.selectionStart
+        val selectionEnd = etNoteContent.selectionEnd
+
+        if (selectionStart == selectionEnd) {
+            // Single line conversion
+            val lineStart = text.lastIndexOf('\n', selectionStart - 1).let { if (it == -1) 0 else it + 1 }
+            val lineEnd = text.indexOf('\n', selectionStart).let { if (it == -1) text.length else it }
+            val currentLine = text.substring(lineStart, lineEnd)
+
+            if (currentLine.matches(Regex("\\d+\\.\\s.*"))) {
+                // Remove number
+                val numberEnd = currentLine.indexOf('.') + 2
+                text.delete(lineStart, lineStart + numberEnd)
+                isNumberedList = false
+                currentListNumber = 1
+            } else if (currentLine.startsWith("• ")) {
+                // Replace bullet with number
+                text.delete(lineStart, lineStart + 2)
+                text.insert(lineStart, "$currentListNumber. ")
+                isNumberedList = true
+                currentListNumber++
+            } else {
+                // Add number
+                text.insert(lineStart, "$currentListNumber. ")
+                isNumberedList = true
+                currentListNumber++
+            }
+        } else {
+            isNumberedList = !isNumberedList
+            isBulletList = false
+            if (!isNumberedList) {
+                currentListNumber = 1
+            }
+            applyListStyle()
+        }
         updateButtonStates()
-        applyListStyle()
+    }
+
+    private fun toggleCheckboxList() {
+        val text = etNoteContent.text
+        val selectionStart = etNoteContent.selectionStart
+        val selectionEnd = etNoteContent.selectionEnd
+
+        if (selectionStart == selectionEnd) {
+            val lineStart = text.lastIndexOf('\n', selectionStart - 1).let { if (it == -1) 0 else it + 1 }
+            val lineEnd = text.indexOf('\n', selectionStart).let { if (it == -1) text.length else it }
+            val currentLine = text.substring(lineStart, lineEnd)
+
+            when {
+                currentLine.startsWith(CHECKBOX_UNCHECKED) || currentLine.startsWith(CHECKBOX_CHECKED) -> {
+                    val checkboxLength = if (currentLine.startsWith(CHECKBOX_UNCHECKED)) 
+                        CHECKBOX_UNCHECKED.length else CHECKBOX_CHECKED.length
+                    text.delete(lineStart, lineStart + checkboxLength + 1)
+                    isCheckboxList = false
+                }
+                else -> {
+                    text.insert(lineStart, "$CHECKBOX_UNCHECKED ")
+                    isCheckboxList = true
+                }
+            }
+        } else {
+            isCheckboxList = !isCheckboxList
+            if (isCheckboxList) {
+                val lines = text.substring(selectionStart, selectionEnd).split("\n")
+                val newText = StringBuilder()
+                lines.forEachIndexed { index, line ->
+                    if (index > 0) newText.append("\n")
+                    newText.append("$CHECKBOX_UNCHECKED $line")
+                }
+                text.replace(selectionStart, selectionEnd, newText.toString())
+            }
+        }
+        updateButtonStates()
+    }
+
+    private fun toggleCheckboxState(position: Int) {
+        val text = etNoteContent.text
+        val lineStart = text.lastIndexOf('\n', position - 1).let { if (it == -1) 0 else it + 1 }
+        
+        if (position >= lineStart) {
+            val lineEnd = text.indexOf('\n', position).let { if (it == -1) text.length else it }
+            val currentLine = text.substring(lineStart, lineEnd)
+            
+            when {
+                currentLine.startsWith(CHECKBOX_UNCHECKED) -> {
+                    text.replace(lineStart, lineStart + CHECKBOX_UNCHECKED.length, CHECKBOX_CHECKED)
+                }
+                currentLine.startsWith(CHECKBOX_CHECKED) -> {
+                    text.replace(lineStart, lineStart + CHECKBOX_CHECKED.length, CHECKBOX_UNCHECKED)
+                }
+            }
+        }
     }
 
     private fun updateButtonStates() {
@@ -164,6 +363,7 @@ class EditNoteActivity : AppCompatActivity() {
         btnStrikethrough.isSelected = isStrikethrough
         btnBulletList.isSelected = isBulletList
         btnNumberedList.isSelected = isNumberedList
+        btnCheckbox.isSelected = isCheckboxList
     }
 
     private fun applyCurrentFormatting(editable: Editable?) {
@@ -171,38 +371,58 @@ class EditNoteActivity : AppCompatActivity() {
             val selectionStart = etNoteContent.selectionStart
             val selectionEnd = etNoteContent.selectionEnd
             
-            if (selectionStart != selectionEnd) {
-                // Apply formatting to selected text
-                applySpans(text, selectionStart, selectionEnd)
-            } else {
-                // Apply formatting to newly typed text
-                val start = text.getSpans<StyleSpan>(0, text.length).lastOrNull()?.let { span ->
-                    text.getSpanEnd(span)
-                } ?: 0
-                applySpans(text, start, text.length)
+            if (selectionStart == selectionEnd && selectionStart > 0) {
+                // Apply formatting to single character or continue previous formatting
+                if (isBold) text.setSpan(StyleSpan(Typeface.BOLD), selectionStart - 1, selectionStart, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (isItalic) text.setSpan(StyleSpan(Typeface.ITALIC), selectionStart - 1, selectionStart, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (isUnderline) text.setSpan(UnderlineSpan(), selectionStart - 1, selectionStart, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (isStrikethrough) text.setSpan(StrikethroughSpan(), selectionStart - 1, selectionStart, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
-    }
-
-    private fun applySpans(text: Editable, start: Int, end: Int) {
-        if (isBold) text.setSpan(StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (isItalic) text.setSpan(StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (isUnderline) text.setSpan(UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (isStrikethrough) text.setSpan(StrikethroughSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     private fun handleNewLine(cursorPosition: Int) {
         val text = etNoteContent.text
-        val lineStart = text.lastIndexOf('\n', cursorPosition - 2) + 1
+        val lineStart = text.lastIndexOf('\n', cursorPosition - 2).let { if (it == -1) 0 else it + 1 }
         val currentLine = text.subSequence(lineStart, cursorPosition - 1).toString()
         
         when {
-            currentLine.startsWith("• ") -> text.insert(cursorPosition, "\n• ")
+            currentLine.startsWith(CHECKBOX_UNCHECKED) || currentLine.startsWith(CHECKBOX_CHECKED) -> {
+                if (currentLine.length <= 2) {
+                    // Empty checkbox, remove it
+                    text.delete(lineStart, cursorPosition)
+                    isCheckboxList = false
+                } else {
+                    // Continue checkbox list with unchecked box
+                    text.insert(cursorPosition, "\n$CHECKBOX_UNCHECKED ")
+                }
+            }
+            currentLine.startsWith("• ") -> {
+                if (currentLine.length <= 2) {
+                    // Empty bullet point, remove it
+                    text.delete(lineStart, cursorPosition)
+                    isBulletList = false
+                    currentListNumber = 1
+                } else {
+                    text.insert(cursorPosition, "\n• ")
+                }
+            }
             currentLine.matches(Regex("\\d+\\.\\s.*")) -> {
-                val nextNumber = currentLine.substringBefore('.').toInt() + 1
-                text.insert(cursorPosition, "\n$nextNumber. ")
+                if (currentLine.matches(Regex("\\d+\\.\\s*"))) {
+                    // Empty numbered point, remove it
+                    text.delete(lineStart, cursorPosition)
+                    isNumberedList = false
+                    currentListNumber = 1
+                } else {
+                    currentListNumber = currentLine.substringBefore('.').toIntOrNull()?.plus(1) ?: 1
+                    text.insert(cursorPosition, "\n$currentListNumber. ")
+                }
+            }
+            else -> {
+                currentListNumber = 1
             }
         }
+        updateButtonStates()
     }
 
     private fun handleBackspace(cursorPosition: Int) {
@@ -226,15 +446,27 @@ class EditNoteActivity : AppCompatActivity() {
         val selectionStart = etNoteContent.selectionStart
         val selectionEnd = etNoteContent.selectionEnd
         
-        val lines = text.toString().substring(selectionStart, selectionEnd).split("\n")
+        val selectedText = text.toString().substring(selectionStart, selectionEnd)
+        val lines = selectedText.split("\n")
         val styledText = SpannableStringBuilder()
+        
+        if (isNumberedList) {
+            currentListNumber = 1
+        }
         
         lines.forEachIndexed { index, line ->
             if (index > 0) styledText.append("\n")
+            
+            // Remove existing bullet or number if present
+            val cleanLine = line.replace(Regex("^(•|\\d+\\.)\\s+"), "")
+            
             when {
-                isBulletList -> styledText.append("• $line")
-                isNumberedList -> styledText.append("${index + 1}. $line")
-                else -> styledText.append(line)
+                isBulletList -> styledText.append("• $cleanLine")
+                isNumberedList -> {
+                    styledText.append("$currentListNumber. $cleanLine")
+                    currentListNumber++
+                }
+                else -> styledText.append(cleanLine)
             }
         }
         
@@ -276,15 +508,13 @@ class EditNoteActivity : AppCompatActivity() {
             text.getSpans<UnderlineSpan>(selectionStart, selectionEnd).forEach { text.removeSpan(it) }
             text.getSpans<StrikethroughSpan>(selectionStart, selectionEnd).forEach { text.removeSpan(it) }
 
-            // Apply new spans
-            applySpans(text, selectionStart, selectionEnd)
+            // Apply new spans based on current formatting states
+            if (isBold) text.setSpan(StyleSpan(Typeface.BOLD), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (isItalic) text.setSpan(StyleSpan(Typeface.ITALIC), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (isUnderline) text.setSpan(UnderlineSpan(), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (isStrikethrough) text.setSpan(StrikethroughSpan(), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         } else {
             applyCurrentFormatting(text)
         }
-    }
-
-    companion object {
-        const val EXTRA_NOTE_TITLE = "extra_note_title"
-        const val EXTRA_NOTE_CONTENT = "extra_note_content"
     }
 }

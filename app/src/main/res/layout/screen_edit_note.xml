@@ -63,13 +63,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:boxBackgroundColor="@android:color/transparent"
-                app:boxStrokeColor="@color/accent_color"
+                app:boxStrokeColor="@color/text_input_box_stroke"
                 app:hintTextColor="@color/accent_color"
                 android:textColorHint="@color/secondary_text"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="1dp"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -94,83 +96,122 @@
                 app:strokeColor="@color/accent_color"
                 app:cardBackgroundColor="@android:color/transparent">
 
-                <HorizontalScrollView
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scrollbars="none"
-                    android:paddingVertical="8dp">
+                    android:layout_height="wrap_content">
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
+                    <HorizontalScrollView
+                        android:id="@+id/format_tools_scroll"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingHorizontal="12dp"
-                        android:gravity="center_vertical">
+                        android:scrollbars="none"
+                        android:paddingVertical="8dp"
+                        android:clipToPadding="false"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/scroll_indicator"
+                        app:layout_constraintTop_toTopOf="parent">
 
-                        <ImageButton
-                            android:id="@+id/btn_bold"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_bold"
-                            android:contentDescription="Bold"/>
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="12dp"
+                            android:gravity="center_vertical">
 
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_bold"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_bold"
+                                android:contentDescription="Bold"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_italic"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_italic"
-                            android:contentDescription="Italic"/>
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_italic"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_italic"
+                                android:contentDescription="Italic"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_underline"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_underline"
-                            android:contentDescription="Underline"/>
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_underline"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_underline"
+                                android:contentDescription="Underline"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_strikethrough"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_strikethrough"
-                            android:contentDescription="Strikethrough"/>
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="16dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_strikethrough"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_strikethrough"
+                                android:contentDescription="Strikethrough"/>
 
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="24dp"
-                            android:background="@color/accent_color"
-                            android:alpha="0.5"/>
+                            <Space android:layout_width="16dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="16dp" android:layout_height="wrap_content"/>
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="24dp"
+                                android:background="@color/accent_color"
+                                android:alpha="0.5"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_bullet_list"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_list_bulleted"
-                            android:contentDescription="Bullet List"/>
+                            <Space android:layout_width="16dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_bullet_list"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_list_bulleted"
+                                android:contentDescription="Bullet List"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_numbered_list"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_list_numbered"
-                            android:contentDescription="Numbered List"/>
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+                            <ImageButton
+                                android:id="@+id/btn_numbered_list"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_list_numbered"
+                                android:contentDescription="Numbered List"/>
 
-                        <ImageButton
-                            android:id="@+id/btn_indent"
-                            style="@style/FormatButtonStyle"
-                            android:src="@drawable/ic_format_indent"
-                            android:contentDescription="Indent"/>
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
-                    </LinearLayout>
-                </HorizontalScrollView>
+                            <ImageButton
+                                android:id="@+id/btn_indent"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_format_indent"
+                                android:contentDescription="Indent"/>
+
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+
+                            <ImageButton
+                                android:id="@+id/btn_checkbox"
+                                style="@style/FormatButtonStyle"
+                                android:src="@drawable/ic_checkbox_outline"
+                                android:contentDescription="Add Checkbox"/>
+
+                            <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <FrameLayout
+                        android:id="@+id/scroll_indicator"
+                        android:layout_width="24dp"
+                        android:layout_height="0dp"
+                        android:background="@drawable/gradient_scroll_indicator"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_chevron_right"
+                            android:alpha="0.7"
+                            app:tint="@color/accent_color"/>
+                    </FrameLayout>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Note Content Card -->
@@ -190,7 +231,9 @@
                     android:layout_height="match_parent"
                     android:background="@null"
                     android:hint="Start typing..."
-                    android:textSize="16sp"
+                    android:textSize="18sp"
+                    android:lineSpacingMultiplier="1.2"
+                    android:lineSpacingExtra="8dp"
                     android:textColor="@color/primary_text"
                     android:textColorHint="@color/secondary_text"
                     android:inputType="textMultiLine|textCapSentences"

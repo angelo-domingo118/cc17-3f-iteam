@@ -60,6 +60,12 @@ import com.example.neuralnotesproject.viewmodels.NotebookViewModelFactory
 import com.example.neuralnotesproject.adapters.MessageAdapter
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.neuralnotesproject.ui.TypingIndicator
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import com.example.neuralnotesproject.viewmodels.NoteViewModel
+import com.example.neuralnotesproject.viewmodels.NoteViewModelFactory
+import com.example.neuralnotesproject.repository.NoteRepository
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: com.example.neuralnotesproject.viewmodels.NotebookViewModel
@@ -89,10 +95,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private lateinit var typingIndicator: TypingIndicator
 
+    private lateinit var noteViewModel: NoteViewModel
+
     private fun setupMessageHandling() {
-        messageAdapter = MessageAdapter(chatContext) { message ->
-            handleMessageSave(message)
-        }
+        messageAdapter = MessageAdapter(
+            chatContext,
+            onSaveClick = { message -> handleMessageSave(message) },
+            onCopyClick = { message -> handleMessageCopy(message) }
+        )
         
         recyclerView.apply {
             adapter = messageAdapter
@@ -110,9 +120,24 @@ class NotebookInteractionActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleMessageCopy(message: Message) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("AI Response", message.content)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(this, "Message copied to clipboard", Toast.LENGTH_SHORT).show()
+    }
+
     private fun handleMessageSave(message: Message) {
-        // Handle message save
-        Toast.makeText(this, "Message saved", Toast.LENGTH_SHORT).show()
+        val note = Note(
+            id = UUID.randomUUID().toString(),
+            title = "AI Response - ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date())}",
+            content = message.content,
+            notebookId = notebookId,
+            creationDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        )
+        
+        noteViewModel.addNote(note)
+        Toast.makeText(this, "Saved to notes", Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,6 +162,13 @@ class NotebookInteractionActivity : AppCompatActivity() {
             this,
             NotebookViewModelFactory(repository, userId)
         )[com.example.neuralnotesproject.viewmodels.NotebookViewModel::class.java]
+
+        // Initialize NoteViewModel
+        val noteRepository = NoteRepository(database.noteDao())
+        noteViewModel = ViewModelProvider(
+            this,
+            NoteViewModelFactory(noteRepository, notebookId)
+        )[NoteViewModel::class.java]
 
         // Initialize Gemini API
         initializeGeminiApi()
@@ -324,11 +356,10 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView)
-        messageAdapter = MessageAdapter(
+        messageAdapter = com.example.neuralnotesproject.adapters.MessageAdapter(
             messages = chatContext,
-            onMessageClick = { message -> 
-                // Handle message click if needed
-            }
+            onSaveClick = { message -> handleMessageSave(message) },
+            onCopyClick = { message -> handleMessageCopy(message) }
         )
         recyclerView.apply {
             adapter = messageAdapter

@@ -15,6 +15,8 @@ import android.app.Activity
 import android.content.Intent
 import com.example.neuralnotesproject.NotesFragment
 import com.example.neuralnotesproject.R
+import android.widget.HorizontalScrollView
+import android.view.View
 
 class EditNoteActivity : AppCompatActivity() {
 
@@ -34,6 +36,24 @@ class EditNoteActivity : AppCompatActivity() {
 
         initViews()
         setupListeners()
+
+        // Set up scroll indicator visibility
+        val scrollView = findViewById<HorizontalScrollView>(R.id.format_tools_scroll)
+        val scrollIndicator = findViewById<View>(R.id.scroll_indicator)
+        
+        scrollView.viewTreeObserver.addOnGlobalLayoutListener {
+            scrollIndicator.visibility = if (scrollView.canScrollHorizontally(1)) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+        }
+
+        scrollView.setOnScrollChangeListener { _, scrollX, _, _, _ ->
+            // Fade out indicator when scrolled to the end
+            val maxScroll = scrollView.getChildAt(0).width - scrollView.width
+            scrollIndicator.alpha = if (scrollX >= maxScroll) 0f else 1f
+        }
     }
 
     private fun initViews() {

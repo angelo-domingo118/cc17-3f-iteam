@@ -71,4 +71,10 @@
     <color name="warning_color">#FFA726</color>
     <color name="error_color">#EF5350</color>
     <color name="error_dark">#B1525E</color>
+
+    <!-- Add these colors -->
+    <color name="surface_variant">#272727</color>
+    <color name="on_surface_variant">#E0E0E0</color>
+    <color name="primary">#2196F3</color>
+    <color name="on_primary">#FFFFFF</color>
 </resources>
