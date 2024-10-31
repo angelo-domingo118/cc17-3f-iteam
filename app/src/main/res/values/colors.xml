@@ -70,4 +70,5 @@
 
     <color name="warning_color">#FFA726</color>
     <color name="error_color">#EF5350</color>
+    <color name="error_dark">#B1525E</color>
 </resources>

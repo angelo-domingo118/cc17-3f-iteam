@@ -23,6 +23,7 @@ import com.example.neuralnotesproject.data.AppDatabase
 import com.example.neuralnotesproject.repository.NoteRepository
 import com.example.neuralnotesproject.viewmodels.NoteViewModel
 import com.example.neuralnotesproject.viewmodels.NoteViewModelFactory
+import androidx.constraintlayout.widget.ConstraintLayout
 
 class NotesFragment : Fragment() {
 
@@ -52,6 +53,11 @@ class NotesFragment : Fragment() {
 
     private val selectedNotes = mutableSetOf<Note>()
 
+    private lateinit var bottomActionBar: ConstraintLayout
+    private lateinit var btnSelectAll: MaterialButton
+    private lateinit var btnDelete: MaterialButton
+    private var isSelectAllActive = false
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         activity = context as NotebookInteractionActivity
@@ -80,6 +86,12 @@ class NotesFragment : Fragment() {
         setupRecyclerView(view)
         setupButtons(view)
         observeNotes()
+
+        bottomActionBar = view.findViewById(R.id.bottom_action_bar)
+        btnSelectAll = view.findViewById(R.id.btn_select_all)
+        btnDelete = view.findViewById(R.id.btn_delete)
+        
+        setupBottomActionBar()
     }
 
     private fun setupRecyclerView(view: View) {
@@ -109,12 +121,35 @@ class NotesFragment : Fragment() {
 
     private fun onSelectedNotesChanged(selectedNotes: List<Note>) {
         activity.onSelectedNotesChanged(selectedNotes)
+        
+        // Show/hide bottom action bar based on selection
+        bottomActionBar.visibility = if (selectedNotes.isNotEmpty()) {
+            View.VISIBLE
+        } else {
+            View.GONE
+            isSelectAllActive = false
+            btnSelectAll.text = "Select All"
+            View.GONE
+        }
     }
 
-    // Remove this method as it's no longer needed
-    // fun getSelectedNotesContent(): String {
-    //     return selectedNotes.joinToString("\n\n") { "${it.title}\n${it.content}" }
-    // }
+    private fun setupBottomActionBar() {
+        btnSelectAll.setOnClickListener {
+            if (isSelectAllActive) {
+                noteAdapter.unselectAll()
+                btnSelectAll.text = "Select All"
+                isSelectAllActive = false
+            } else {
+                noteAdapter.selectAll()
+                btnSelectAll.text = "Unselect All"
+                isSelectAllActive = true
+            }
+        }
+        
+        btnDelete.setOnClickListener {
+            deleteSelectedNotes()
+        }
+    }
 
     private fun launchEditNoteActivity(note: Note? = null) {
         val intent = Intent(requireContext(), EditNoteActivity::class.java).apply {

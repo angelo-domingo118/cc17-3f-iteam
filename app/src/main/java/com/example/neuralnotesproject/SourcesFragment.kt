@@ -34,6 +34,7 @@ import com.example.neuralnotesproject.viewmodels.SourceViewModel
 import com.example.neuralnotesproject.viewmodels.SourceViewModelFactory
 import com.example.neuralnotesproject.util.FileStorageManager
 import android.content.Context
+import androidx.constraintlayout.widget.ConstraintLayout
 
 interface SourceActionListener {
     fun onFileSelected(uri: Uri)
@@ -48,6 +49,10 @@ class SourcesFragment : Fragment(), SourceActionListener {
     private lateinit var notebookId: String
     private lateinit var sourceViewModel: SourceViewModel
     private lateinit var activity: NotebookInteractionActivity
+    private lateinit var bottomActionBar: ConstraintLayout
+    private lateinit var btnSelectAll: MaterialButton
+    private lateinit var btnDelete: MaterialButton
+    private var isSelectAllActive = false
 
     private val pasteNotesLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -97,7 +102,7 @@ class SourcesFragment : Fragment(), SourceActionListener {
             emptyList(),  // Start with empty list
             onSourceClick = { /* Handle source click */ },
             onSelectionChanged = { selectedSources ->
-                (activity as? NotebookInteractionActivity)?.onSelectedSourcesChanged(selectedSources)
+                onSelectedSourcesChanged(selectedSources)
             }
         )
         recyclerView.adapter = sourceAdapter
@@ -112,6 +117,12 @@ class SourcesFragment : Fragment(), SourceActionListener {
         view.findViewById<MaterialButton>(R.id.btn_add_source).setOnClickListener {
             showAddSourceBottomSheet()
         }
+
+        bottomActionBar = view.findViewById(R.id.bottom_action_bar)
+        btnSelectAll = view.findViewById(R.id.btn_select_all)
+        btnDelete = view.findViewById(R.id.btn_delete)
+        
+        setupBottomActionBar()
     }
 
     private fun showAddSourceBottomSheet() {
@@ -134,10 +145,21 @@ class SourcesFragment : Fragment(), SourceActionListener {
         if (selectedSources.isNotEmpty()) {
             viewLifecycleOwner.lifecycleScope.launch {
                 selectedSources.forEach { source ->
+                    // Delete the source file if it exists
+                    source.filePath?.let { path ->
+                        val file = File(path)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                    // Delete from database
                     sourceViewModel.deleteSource(source)
                 }
                 sourceAdapter.unselectAll()
+                Toast.makeText(context, "${selectedSources.size} source(s) deleted", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(context, "No sources selected", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -320,5 +342,41 @@ class SourcesFragment : Fragment(), SourceActionListener {
     // When a website URL is selected
     private fun handleWebsiteSelection(url: String) {
         activity.onWebsiteUrlSelected(url)
+    }
+
+    private fun setupBottomActionBar() {
+        btnSelectAll.setOnClickListener {
+            if (isSelectAllActive) {
+                sourceAdapter.unselectAll()
+                btnSelectAll.text = "Select All"
+                isSelectAllActive = false
+            } else {
+                sourceAdapter.selectAll()
+                btnSelectAll.text = "Unselect All"
+                isSelectAllActive = true
+            }
+        }
+        
+        btnDelete.setOnClickListener {
+            deleteSelectedSources()
+        }
+    }
+
+    private fun onSelectedSourcesChanged(selectedSources: List<Source>) {
+        // Update activity
+        activity?.let {
+            if (it is NotebookInteractionActivity) {
+                it.onSelectedSourcesChanged(selectedSources)
+            }
+        }
+        
+        // Show/hide bottom action bar based on selection
+        bottomActionBar.visibility = if (selectedSources.isNotEmpty()) {
+            View.VISIBLE
+        } else {
+            isSelectAllActive = false
+            btnSelectAll.text = "Select All"
+            View.GONE
+        }
     }
 }

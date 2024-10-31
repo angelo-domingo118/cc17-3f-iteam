@@ -171,31 +171,13 @@ class NotebookInteractionActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
                     0 -> { // Sources
-                        hideCurrentFragment()
-                        if (sourcesFragment == null) {
-                            sourcesFragment = SourcesFragment.newInstance(notebookId)
-                        }
-                        showFragment(sourcesFragment!!)
-                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
-                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
-                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
+                        showSourcesFragment()
                     }
                     1 -> { // Notes
-                        hideCurrentFragment()
-                        if (notesFragment == null) {
-                            notesFragment = NotesFragment.newInstance(notebookId)
-                        }
-                        showFragment(notesFragment!!)
-                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
-                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
-                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
+                        showNotesFragment()
                     }
                     2 -> { // Chat
-                        hideCurrentFragment()
-                        findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
-                        findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
-                        findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.VISIBLE
-                        currentFragment = null
+                        showChatView()
                     }
                 }
             }
@@ -246,40 +228,64 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun showSourcesFragment() {
-        hideCurrentFragment()
         if (sourcesFragment == null) {
             sourcesFragment = SourcesFragment.newInstance(notebookId)
         }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, sourcesFragment!!)
-            .commit()
+        
+        val transaction = supportFragmentManager.beginTransaction()
+        
+        // Hide current fragment
+        currentFragment?.let { transaction.hide(it) }
+        
+        // Add or show sources fragment
+        if (!sourcesFragment!!.isAdded) {
+            transaction.add(R.id.fragment_container, sourcesFragment!!)
+        } else {
+            transaction.show(sourcesFragment!!)
+        }
+        
+        transaction.commit()
+        
+        currentFragment = sourcesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
         findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
-        updateTabStates(0)
     }
 
     private fun showNotesFragment() {
-        hideCurrentFragment()
         if (notesFragment == null) {
             notesFragment = NotesFragment.newInstance(notebookId)
         }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, notesFragment!!)
-            .commit()
+        
+        val transaction = supportFragmentManager.beginTransaction()
+        
+        // Hide current fragment
+        currentFragment?.let { transaction.hide(it) }
+        
+        // Add or show notes fragment
+        if (!notesFragment!!.isAdded) {
+            transaction.add(R.id.fragment_container, notesFragment!!)
+        } else {
+            transaction.show(notesFragment!!)
+        }
+        
+        transaction.commit()
+        
+        currentFragment = notesFragment
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.VISIBLE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.GONE
         findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.GONE
-        updateTabStates(1)
     }
 
     private fun showChatView() {
-        hideCurrentFragment()
+        val transaction = supportFragmentManager.beginTransaction()
+        currentFragment?.let { transaction.hide(it) }
+        transaction.commit()
+        
+        currentFragment = null
         findViewById<FrameLayout>(R.id.fragment_container).visibility = View.GONE
         findViewById<RecyclerView>(R.id.recyclerView).visibility = View.VISIBLE
         findViewById<ConstraintLayout>(R.id.bottom_user_input_navigation).visibility = View.VISIBLE
-        currentFragment = null
-        updateTabStates(2)
     }
 
     private fun hideCurrentFragment() {
