@@ -19,6 +19,8 @@ class TypingIndicator @JvmOverloads constructor(
     private val dot2: View
     private val dot3: View
     private val animators = mutableListOf<ValueAnimator>()
+    var isAnimating: Boolean = false
+        private set
 
     init {
         LayoutInflater.from(context).inflate(R.layout.typing_indicator, this, true)
@@ -56,10 +58,14 @@ class TypingIndicator @JvmOverloads constructor(
     }
 
     fun startAnimation() {
+        isAnimating = true
+        visibility = View.VISIBLE
         animators.forEach { it.start() }
     }
 
     fun stopAnimation() {
+        isAnimating = false
+        visibility = View.GONE
         animators.forEach { it.cancel() }
     }
 

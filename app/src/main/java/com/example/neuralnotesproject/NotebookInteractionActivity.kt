@@ -66,6 +66,7 @@ import android.content.Context
 import com.example.neuralnotesproject.viewmodels.NoteViewModel
 import com.example.neuralnotesproject.viewmodels.NoteViewModelFactory
 import com.example.neuralnotesproject.repository.NoteRepository
+import com.example.neuralnotesproject.util.AIConstants
 
 class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var notebookViewModel: com.example.neuralnotesproject.viewmodels.NotebookViewModel
@@ -96,6 +97,8 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private lateinit var typingIndicator: TypingIndicator
 
     private lateinit var noteViewModel: NoteViewModel
+
+    private var isTypingResponse = false
 
     private fun setupMessageHandling() {
         messageAdapter = MessageAdapter(
@@ -204,12 +207,18 @@ class NotebookInteractionActivity : AppCompatActivity() {
                 when (tab?.position) {
                     0 -> { // Sources
                         showSourcesFragment()
+                        typingIndicator.stopAnimation()
                     }
                     1 -> { // Notes
                         showNotesFragment()
+                        typingIndicator.stopAnimation()
                     }
                     2 -> { // Chat
                         showChatView()
+                        // Restore typing indicator state if we were in the middle of a response
+                        if (isTypingResponse) {
+                            typingIndicator.startAnimation()
+                        }
                     }
                 }
             }
@@ -341,14 +350,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
     private fun initializeGeminiApi() {
         val config = generationConfig {
-            temperature = 0.7f
+            temperature = 0.7f  // Balanced between creativity and consistency
             topK = 40
-            topP = 0.95f
+            topP = 0.8f
             maxOutputTokens = 1024
         }
 
         generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash-002",
+            modelName = "gemini-1.5-flash-002",  // Updated to use flash model
             apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
             generationConfig = config
         )
@@ -373,26 +382,27 @@ class NotebookInteractionActivity : AppCompatActivity() {
         chatContext.add(message)
         messageAdapter.notifyItemInserted(chatContext.size - 1)
         
-        // Show typing indicator
-        typingIndicator.visibility = View.VISIBLE
+        // Show typing indicator and set state
+        isTypingResponse = true
+        typingIndicator.startAnimation()
         
         lifecycleScope.launch {
             try {
                 val response = generateAiResponse(userMessage)
                 
-                // Hide typing indicator
-                typingIndicator.visibility = View.GONE
+                // Hide typing indicator and reset state
+                isTypingResponse = false
+                typingIndicator.stopAnimation()
                 
                 // Add AI response to context
                 val aiMessage = Message(content = response, isUser = false, notebookId = notebookId)
                 chatContext.add(aiMessage)
                 messageAdapter.notifyItemInserted(chatContext.size - 1)
                 recyclerView.scrollToPosition(chatContext.size - 1)
-                
-                // Don't clear selections here anymore
             } catch (e: Exception) {
-                // Handle error
-                typingIndicator.visibility = View.GONE
+                // Handle error and reset state
+                isTypingResponse = false
+                typingIndicator.stopAnimation()
                 Toast.makeText(this@NotebookInteractionActivity, 
                     "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -402,19 +412,25 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private suspend fun generateAiResponse(userMessage: String): String {
         return withContext(Dispatchers.IO) {
             try {
-                // Build context from selected notes
+                // Build context from selected notes with more detail
                 val contextBuilder = StringBuilder()
                 
-                if (selectedNotesContent.isNotEmpty()) {
-                    contextBuilder.append("Context from selected notes:\n")
-                    contextBuilder.append(selectedNotesContent)
-                    contextBuilder.append("\n\n")
+                if (selectedNotes.isNotEmpty()) {
+                    contextBuilder.append("Selected notes (${selectedNotes.size}):\n")
+                    selectedNotes.forEachIndexed { index, note ->
+                        contextBuilder.append("Note ${index + 1}: '${note.title}'\n")
+                        contextBuilder.append("Content: ${note.content}\n")
+                        contextBuilder.append("Created: ${note.creationDate}\n\n")
+                    }
                 }
                 
-                if (selectedSourcesContent.isNotEmpty()) {
-                    contextBuilder.append("Context from selected sources:\n")
-                    contextBuilder.append(selectedSourcesContent)
-                    contextBuilder.append("\n\n")
+                if (selectedSources.isNotEmpty()) {
+                    contextBuilder.append("Selected sources (${selectedSources.size}):\n")
+                    selectedSources.forEachIndexed { index, source ->
+                        contextBuilder.append("Source ${index + 1}: '${source.name}'\n")
+                        contextBuilder.append("Type: ${source.type.name}\n")
+                        contextBuilder.append("Content: ${source.content}\n\n")
+                    }
                 }
                 
                 // Add previous messages to maintain context
@@ -428,20 +444,17 @@ class NotebookInteractionActivity : AppCompatActivity() {
                     contextBuilder.append("\n")
                 }
 
-                // Build the complete prompt
-                val prompt = if (contextBuilder.isNotEmpty()) {
-                    """
-                    Here is the context to consider:
+                // Build the complete prompt with system instructions
+                val prompt = """
+                    ${AIConstants.SYSTEM_PROMPT}
+                    
+                    Current context:
                     ${contextBuilder}
                     
                     User question: $userMessage
                     
-                    Please provide a response considering the above context.
                     Assistant:
-                    """.trimIndent()
-                } else {
-                    "User: $userMessage\nAssistant:"
-                }
+                """.trimIndent()
 
                 val response = generativeModel.generateContent(prompt)
                 response.text ?: "Sorry, I couldn't generate a response."
@@ -612,24 +625,14 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private fun showWelcomeMessage() {
         val welcomeMessage = Message(
             content = """
-                👋 Welcome to Neural Notes! I'm your AI assistant. Here's what I can help you with:
+                👋 Welcome to your NeuroNotes AI assistant! I'm here to help you organize and understand your notes and sources.
 
-                📝 Notes Management:
-                - Summarize your notes
-                - Extract key points
-                - Generate study questions
-                
-                📚 Source Analysis:
-                - Analyze documents and websites
-                - Extract relevant information
-                - Compare different sources
+                To get started:
+                - Select any notes or sources you'd like to discuss
+                - Ask me questions about your content
+                - I can help summarize, analyze, or explain anything you've selected
 
-                💡 Study Help:
-                - Answer questions about your notes
-                - Explain complex topics
-                - Help with research
-
-                Just select your notes/sources and ask me anything! How can I help you today?
+                What would you like to explore today?
             """.trimIndent(),
             isUser = false,
             notebookId = notebookId
