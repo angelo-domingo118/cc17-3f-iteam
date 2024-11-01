@@ -1,6 +1,9 @@
 [versions]
 agp = "8.6.0"
 generativeai = "0.9.0"
+generativeaiVersion = "0.1.2"
+googleGenerativeai = "0.1.1"
+googleGenerativeaiVersion = "0.2.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -15,10 +18,14 @@ material3Android = "1.3.0"
 preferenceKtx = "1.2.1"
 firebaseAuthKtx = "23.1.0"
 mediationTestSuite = "3.0.0"
+common = "0.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
+generativeai-v011 = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "googleGenerativeai" }
+generativeai-v012 = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeaiVersion" }
+generativeai-v020 = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "googleGenerativeaiVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -31,6 +38,7 @@ androidx-material3-android = { group = "androidx.compose.material3", name = "mat
 androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferenceKtx" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 mediation-test-suite = { group = "com.google.android.ads", name = "mediation-test-suite", version.ref = "mediationTestSuite" }
+common = { group = "com.google.ai.client.generativeai", name = "common", version.ref = "common" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

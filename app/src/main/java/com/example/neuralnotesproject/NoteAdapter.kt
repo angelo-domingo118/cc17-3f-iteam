@@ -32,6 +32,9 @@ class NoteAdapter(
         val note = notes[position]
         holder.titleTextView.text = note.title
         holder.contentTextView.text = note.content
+        
+        // Update checkbox state without triggering listener
+        holder.checkBox.setOnCheckedChangeListener(null)
         holder.checkBox.isChecked = selectedItems.contains(note.id)
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -41,6 +44,7 @@ class NoteAdapter(
             }
             onSelectionChanged(getSelectedItems())
         }
+        
         holder.itemView.setOnClickListener { onNoteClick(note) }
     }
 
@@ -63,5 +67,13 @@ class NoteAdapter(
 
     fun getSelectedItems(): List<Note> {
         return notes.filter { selectedItems.contains(it.id) }
+    }
+
+    // Add this method to restore selection state
+    fun restoreSelectionState() {
+        if (selectedItems.isNotEmpty()) {
+            notifyDataSetChanged()
+            onSelectionChanged(getSelectedItems())
+        }
     }
 }

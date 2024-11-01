@@ -66,7 +66,21 @@ class SourceAdapter(
     }
 
     override fun onBindViewHolder(holder: SourceViewHolder, position: Int) {
-        holder.bind(sources[position])
+        val source = sources[position]
+        holder.bind(source)
+        // Update checkbox state without triggering listener
+        holder.itemView.findViewById<CheckBox>(R.id.checkbox_source).apply {
+            setOnCheckedChangeListener(null)
+            isChecked = selectedSources.contains(source)
+            setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedSources.add(source)
+                } else {
+                    selectedSources.remove(source)
+                }
+                onSelectionChanged(selectedSources.toList())
+            }
+        }
     }
 
     override fun getItemCount() = sources.size
@@ -88,5 +102,13 @@ class SourceAdapter(
 
     fun getSelectedItems(): List<Source> {
         return selectedSources.toList()
+    }
+
+    // Add this method to restore selection state
+    fun restoreSelectionState() {
+        if (selectedSources.isNotEmpty()) {
+            notifyDataSetChanged()
+            onSelectionChanged(selectedSources.toList())
+        }
     }
 }

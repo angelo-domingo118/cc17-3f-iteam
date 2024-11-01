@@ -348,7 +348,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
         }
 
         generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
+            modelName = "gemini-1.5-flash-002",
             apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
             generationConfig = config
         )
@@ -368,49 +368,33 @@ class NotebookInteractionActivity : AppCompatActivity() {
     }
 
     private fun sendMessage(userMessage: String) {
-        // Add user message to chat
-        val userMsg = Message(
-            content = userMessage,
-            isUser = true,
-            notebookId = notebookId
-        )
-        chatContext.add(userMsg)
-        messageAdapter.updateMessages(chatContext)
-        recyclerView.scrollToPosition(chatContext.size - 1)
-
+        // Add user message to context
+        val message = Message(content = userMessage, isUser = true, notebookId = notebookId)
+        chatContext.add(message)
+        messageAdapter.notifyItemInserted(chatContext.size - 1)
+        
         // Show typing indicator
         typingIndicator.visibility = View.VISIBLE
-        typingIndicator.startAnimation()
-
-        // Generate AI response
+        
         lifecycleScope.launch {
             try {
                 val response = generateAiResponse(userMessage)
                 
-                // Add AI response to chat
-                val aiMsg = Message(
-                    content = response,
-                    isUser = false,
-                    notebookId = notebookId
-                )
-                chatContext.add(aiMsg)
+                // Hide typing indicator
+                typingIndicator.visibility = View.GONE
                 
-                withContext(Dispatchers.Main) {
-                    typingIndicator.stopAnimation()
-                    typingIndicator.visibility = View.GONE
-                    messageAdapter.updateMessages(chatContext)
-                    recyclerView.scrollToPosition(chatContext.size - 1)
-                }
+                // Add AI response to context
+                val aiMessage = Message(content = response, isUser = false, notebookId = notebookId)
+                chatContext.add(aiMessage)
+                messageAdapter.notifyItemInserted(chatContext.size - 1)
+                recyclerView.scrollToPosition(chatContext.size - 1)
+                
+                // Don't clear selections here anymore
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    typingIndicator.stopAnimation()
-                    typingIndicator.visibility = View.GONE
-                    Toast.makeText(
-                        this@NotebookInteractionActivity,
-                        "Error: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                // Handle error
+                typingIndicator.visibility = View.GONE
+                Toast.makeText(this@NotebookInteractionActivity, 
+                    "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -418,7 +402,47 @@ class NotebookInteractionActivity : AppCompatActivity() {
     private suspend fun generateAiResponse(userMessage: String): String {
         return withContext(Dispatchers.IO) {
             try {
-                val prompt = "User: $userMessage\nAssistant:"
+                // Build context from selected notes
+                val contextBuilder = StringBuilder()
+                
+                if (selectedNotesContent.isNotEmpty()) {
+                    contextBuilder.append("Context from selected notes:\n")
+                    contextBuilder.append(selectedNotesContent)
+                    contextBuilder.append("\n\n")
+                }
+                
+                if (selectedSourcesContent.isNotEmpty()) {
+                    contextBuilder.append("Context from selected sources:\n")
+                    contextBuilder.append(selectedSourcesContent)
+                    contextBuilder.append("\n\n")
+                }
+                
+                // Add previous messages to maintain context
+                if (chatContext.isNotEmpty()) {
+                    contextBuilder.append("Previous conversation:\n")
+                    chatContext.takeLast(4).forEach { message ->
+                        contextBuilder.append(if (message.isUser) "User: " else "Assistant: ")
+                        contextBuilder.append(message.content)
+                        contextBuilder.append("\n")
+                    }
+                    contextBuilder.append("\n")
+                }
+
+                // Build the complete prompt
+                val prompt = if (contextBuilder.isNotEmpty()) {
+                    """
+                    Here is the context to consider:
+                    ${contextBuilder}
+                    
+                    User question: $userMessage
+                    
+                    Please provide a response considering the above context.
+                    Assistant:
+                    """.trimIndent()
+                } else {
+                    "User: $userMessage\nAssistant:"
+                }
+
                 val response = generativeModel.generateContent(prompt)
                 response.text ?: "Sorry, I couldn't generate a response."
             } catch (e: Exception) {

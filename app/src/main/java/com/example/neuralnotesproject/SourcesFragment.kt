@@ -379,4 +379,17 @@ class SourcesFragment : Fragment(), SourceActionListener {
             View.GONE
         }
     }
+
+    fun clearSelections() {
+        sourceAdapter.unselectAll()
+        onSelectedSourcesChanged(emptyList())
+        bottomActionBar.visibility = View.GONE
+        isSelectAllActive = false
+        btnSelectAll.text = "Select All"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sourceAdapter.restoreSelectionState()
+    }
 }

@@ -196,6 +196,20 @@ class NotesFragment : Fragment() {
         }
     }
 
+    fun clearSelections() {
+        selectedNotes.clear()
+        noteAdapter.unselectAll()
+        onSelectedNotesChanged(emptyList())
+        bottomActionBar.visibility = View.GONE
+        isSelectAllActive = false
+        btnSelectAll.text = "Select All"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        noteAdapter.restoreSelectionState()
+    }
+
     companion object {
         const val EXTRA_NOTE_ID = "extra_note_id"
         const val EXTRA_NOTE_TITLE = "extra_note_title"
