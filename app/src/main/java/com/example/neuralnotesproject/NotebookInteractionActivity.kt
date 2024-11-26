@@ -358,7 +358,7 @@ class NotebookInteractionActivity : AppCompatActivity() {
 
         generativeModel = GenerativeModel(
             modelName = "gemini-1.5-flash-002",  // Updated to use flash model
-            apiKey = "AIzaSyBi_46ImoqYxa69XDTUA2fjSQQjhuFhfuY",
+            apiKey = "AIzaSyDCIbJjWPmeG5FULSuaSQIp7UuWT6yzRqo",
             generationConfig = config
         )
     }
