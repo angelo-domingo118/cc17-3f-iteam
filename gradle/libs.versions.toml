@@ -1,5 +1,6 @@
 [versions]
 agp = "8.6.0"
+coreSplashscreen = "1.0.1"
 generativeai = "0.9.0"
 generativeaiVersion = "0.1.2"
 googleGenerativeai = "0.1.1"
@@ -15,6 +16,8 @@ activity = "1.9.2"
 constraintlayout = "2.1.4"
 navigationFragment = "2.8.1"
 material3Android = "1.3.0"
+pdfboxAndroid = "2.0.27.0"
+playServicesMlkitDocumentScanning = "16.0.0-beta4"
 preferenceKtx = "1.2.1"
 firebaseAuthKtx = "23.1.0"
 mediationTestSuite = "3.0.0"
@@ -22,6 +25,7 @@ common = "0.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
 generativeai-v011 = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "googleGenerativeai" }
 generativeai-v012 = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeaiVersion" }
@@ -39,6 +43,8 @@ androidx-preference-ktx = { group = "androidx.preference", name = "preference-kt
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 mediation-test-suite = { group = "com.google.android.ads", name = "mediation-test-suite", version.ref = "mediationTestSuite" }
 common = { group = "com.google.ai.client.generativeai", name = "common", version.ref = "common" }
+pdfbox-android = { module = "com.tom-roush:pdfbox-android", version.ref = "pdfboxAndroid" }
+play-services-mlkit-document-scanning = { module = "com.google.android.gms:play-services-mlkit-document-scanning", version.ref = "playServicesMlkitDocumentScanning" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

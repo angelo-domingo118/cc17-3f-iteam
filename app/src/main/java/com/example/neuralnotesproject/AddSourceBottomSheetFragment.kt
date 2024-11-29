@@ -13,16 +13,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
 
-    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                // Pass the URI to the SourcesFragment
-                (parentFragment as? SourceActionListener)?.onFileSelected(uri)
-                dismiss()
-            }
-        }
-    }
-
     override fun getTheme(): Int = R.style.BottomSheetDialogTheme
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -32,10 +22,6 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<View>(R.id.btn_add_from_files).setOnClickListener {
-            launchFilePicker()
-        }
-
         view.findViewById<View>(R.id.btn_add_website).setOnClickListener {
             showWebsiteUrlInput()
         }
@@ -43,15 +29,6 @@ class AddSourceBottomSheetFragment : BottomSheetDialogFragment() {
         view.findViewById<View>(R.id.btn_paste_text).setOnClickListener {
             showPasteNotes()
         }
-    }
-
-    private fun launchFilePicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/pdf", "text/plain"))
-        }
-        filePickerLauncher.launch(intent)
     }
 
     private fun showWebsiteUrlInput() {

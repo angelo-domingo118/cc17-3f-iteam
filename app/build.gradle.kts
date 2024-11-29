@@ -81,11 +81,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-common:20.4.2")
 
-    // Splash Screen
+    // Splash Screenf
     implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Gemini Pro
-    implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }
 
 configurations.all {
